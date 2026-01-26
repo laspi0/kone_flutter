@@ -35,10 +35,12 @@ jobs:
           $innoPath = "${env:ProgramFiles(x86)}\Inno Setup 6"
           echo "Adding Inno Setup to PATH: $innoPath"
           echo "$innoPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
       - name: Create Installer
         run: |
           # Compile the Inno Setup script
           iscc.exe "installer/windows_installer.iss"
+
       - name: Upload Installer Artifact
         uses: actions/upload-artifact@v4
         with:

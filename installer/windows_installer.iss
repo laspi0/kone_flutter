@@ -1,8 +1,8 @@
 [Setup]
-AppName=Shop Manager
+AppName=ShopManager
 AppVersion=1.0.0
-DefaultDirName={autopf64}\Shop Manager
-DefaultGroupName=Shop Manager
+DefaultDirName={autopf64}\ShopManager
+DefaultGroupName=ShopManager
 UninstallDisplayIcon={app}\shop_manager.exe
 Compression=lzma2
 SolidCompression=yes
@@ -26,8 +26,8 @@ Source: "..\build\windows\x64\runner\Release\*"; DestDir: "{app}"; Flags: ignore
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{group}\Shop Manager"; Filename: "{app}\shop_manager.exe"
-Name: "{autodesktop}\Shop Manager"; Filename: "{app}\shop_manager.exe"; Tasks: desktopicon
+Name: "{group}\ShopManager"; Filename: "{app}\shop_manager.exe"
+Name: "{autodesktop}\ShopManager"; Filename: "{app}\shop_manager.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\shop_manager.exe"; Description: "{cm:LaunchProgram,Shop Manager}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\shop_manager.exe"; Description: "{cm:LaunchProgram,ShopManager}"; Flags: nowait postinstall skipifsilent
