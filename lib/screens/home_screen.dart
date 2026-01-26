@@ -197,19 +197,23 @@ class HomeScreen extends StatelessWidget {
           runSpacing: 12,
           children: [
             _ActionChip(
+              label: 'Gérer les produits',
+              icon: Icons.inventory_2_outlined,
+              onTap: () => context.go('/products'),
+            ),
+            _ActionChip(
+              label: 'Catégories',
+              icon: Icons.category_outlined,
+              onTap: () => context.go('/categories'),
+            ),
+            _ActionChip(
               label: 'Nouvelle vente',
               icon: Icons.add_shopping_cart_outlined,
-              onTap: () {},
-            ),
-            _ActionChip(
-              label: 'Historique',
-              icon: Icons.history,
-              onTap: () {},
-            ),
-            _ActionChip(
-              label: 'Statistiques',
-              icon: Icons.bar_chart_outlined,
-              onTap: () {},
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Disponible prochainement')),
+                );
+              },
             ),
           ],
         ),
@@ -406,6 +410,16 @@ class _DesktopSidebar extends StatelessWidget {
                       label: 'Accueil',
                       selected: true,
                     ),
+                    _SidebarItem(
+                      icon: Icons.inventory_2,
+                      label: 'Produits',
+                      onTap: () => context.go('/products'),
+                    ),
+                    _SidebarItem(
+                      icon: Icons.category_outlined,
+                      label: 'Catégories',
+                      onTap: () => context.go('/categories'),
+                    ),
                   ],
                 ),
               ),
@@ -504,11 +518,13 @@ class _SidebarItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final bool selected;
+  final VoidCallback? onTap;
 
   const _SidebarItem({
     required this.icon,
     required this.label,
     this.selected = false,
+    this.onTap,
   });
 
   @override
@@ -522,6 +538,7 @@ class _SidebarItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: ListTile(
+        onTap: onTap,
         leading: Icon(
           icon,
           size: 20,
@@ -612,6 +629,22 @@ class _MobileDrawer extends StatelessWidget {
                       leading: const Icon(Icons.home_outlined),
                       title: const Text('Accueil'),
                       onTap: () => Navigator.pop(context),
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.inventory_2_outlined),
+                      title: const Text('Produits'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.go('/products');
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.category_outlined),
+                      title: const Text('Catégories'),
+                      onTap: () {
+                        Navigator.pop(context);
+                        context.go('/categories');
+                      },
                     ),
                   ],
                 ),

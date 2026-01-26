@@ -38,3 +38,73 @@ class User {
   // Vérifier si l'utilisateur est caissier
   bool get isCashier => role == 'cashier';
 }
+
+// Modèle Category
+class Category {
+  final int? id;
+  final String name;
+  final String? description;
+
+  Category({
+    this.id,
+    required this.name,
+    this.description,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+    };
+  }
+
+  factory Category.fromMap(Map<String, dynamic> map) {
+    return Category(
+      id: map['id'],
+      name: map['name'],
+      description: map['description'],
+    );
+  }
+}
+
+// Modèle Product
+class Product {
+  final int? id;
+  final String name;
+  final String? description;
+  final double price;
+  final int stock;
+  final int categoryId;
+
+  Product({
+    this.id,
+    required this.name,
+    this.description,
+    required this.price,
+    required this.stock,
+    required this.categoryId,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'price': price,
+      'stock': stock,
+      'category_id': categoryId,
+    };
+  }
+
+  factory Product.fromMap(Map<String, dynamic> map) {
+    return Product(
+      id: map['id'],
+      name: map['name'],
+      description: map['description'],
+      price: (map['price'] as num).toDouble(),
+      stock: map['stock'],
+      categoryId: map['category_id'],
+    );
+  }
+}
