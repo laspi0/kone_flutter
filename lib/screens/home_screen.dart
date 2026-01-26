@@ -310,10 +310,10 @@ class _ActionChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          color: Theme.of(context).colorScheme.primaryContainer,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
           ),
         ),
         child: Row(
@@ -322,15 +322,15 @@ class _ActionChip extends StatelessWidget {
             Icon(
               icon,
               size: 18,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           ],
@@ -371,13 +371,13 @@ class _DesktopSidebar extends StatelessWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
+                        color: Theme.of(context).colorScheme.primary,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         Icons.shopping_bag_outlined,
                         size: 20,
-                        color: Theme.of(context).colorScheme.onSurface,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -516,7 +516,9 @@ class _SidebarItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
-        color: selected ? Theme.of(context).colorScheme.surface : Colors.transparent,
+        color: selected 
+            ? Theme.of(context).colorScheme.primaryContainer
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
       child: ListTile(
@@ -524,7 +526,7 @@ class _SidebarItem extends StatelessWidget {
           icon,
           size: 20,
           color: selected
-              ? Theme.of(context).colorScheme.onSurface
+              ? Theme.of(context).colorScheme.primary
               : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
         ),
         title: Text(
@@ -569,12 +571,12 @@ class _MobileDrawer extends StatelessWidget {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
+                        color: Theme.of(context).colorScheme.primary,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(
-                        user.isAdmin ? Icons.admin_panel_settings_outlined : Icons.person_outline,
-                        color: Theme.of(context).colorScheme.onSurface,
+                      child: const Icon(
+                        Icons.person_outline,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(width: 16),
