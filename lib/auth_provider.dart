@@ -68,4 +68,10 @@ class AuthProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
   }
+  
+  @override
+  void dispose() {
+    // Nettoyer les ressources si nécessaire
+    super.dispose();
+  }
 }

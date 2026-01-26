@@ -18,11 +18,7 @@ class DatabaseHelper {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
 
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createDB,
-    );
+    return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
   Future _createDB(Database db, int version) async {
@@ -44,7 +40,8 @@ class DatabaseHelper {
     // Admin par défaut
     await db.insert('users', {
       'username': 'admin',
-      'password_hash': 'admin123', // En production, utiliser bcrypt ou similaire
+      'password_hash':
+          'admin123', // En production, utiliser bcrypt ou similaire
       'role': 'admin',
     });
 
@@ -54,7 +51,7 @@ class DatabaseHelper {
       'password_hash': 'caissier123',
       'role': 'cashier',
     });
-    
+
     // Autre caissier
     await db.insert('users', {
       'username': 'marie',
@@ -66,7 +63,7 @@ class DatabaseHelper {
   // Authentification
   Future<User?> login(String username, String password) async {
     final db = await database;
-    
+
     final maps = await db.query(
       'users',
       where: 'username = ? AND password_hash = ?',
@@ -74,7 +71,7 @@ class DatabaseHelper {
     );
 
     if (maps.isEmpty) return null;
-    
+
     return User.fromMap(maps.first);
   }
 

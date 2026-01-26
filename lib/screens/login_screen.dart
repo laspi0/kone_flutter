@@ -37,8 +37,16 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _quickLogin(String username, String password) {
+    _usernameController.text = username;
+    _passwordController.text = password;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isDesktop = size.width > 800;
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -46,8 +54,8 @@ class _LoginScreenState extends State<LoginScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Theme.of(context).colorScheme.primaryContainer,
-              Theme.of(context).colorScheme.secondaryContainer,
+              Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              Theme.of(context).colorScheme.secondary.withOpacity(0.1),
             ],
           ),
         ),
@@ -55,55 +63,91 @@ class _LoginScreenState extends State<LoginScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 450),
+              constraints: BoxConstraints(maxWidth: isDesktop ? 500 : 400),
               child: Card(
-                elevation: 8,
+                elevation: 12,
+                shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
                 child: Padding(
-                  padding: const EdgeInsets.all(32),
+                  padding: EdgeInsets.all(isDesktop ? 48 : 32),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Logo
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.store,
-                            size: 64,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        
-                        // Titre
-                        Text(
-                          'Shop Manager',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Connectez-vous pour continuer',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey,
+                        // Logo avec animation
+                        Hero(
+                          tag: 'logo',
+                          child: Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Theme.of(context).colorScheme.primary,
+                                  Theme.of(context).colorScheme.secondary,
+                                ],
+                              ),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.store_rounded,
+                              size: 64,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 32),
                         
-                        // Username field
+                        // Titre moderne
+                        Text(
+                          'Shop Manager',
+                          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Bienvenue ! Connectez-vous pour continuer',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 40),
+                        
+                        // Username field moderne
                         TextFormField(
                           controller: _usernameController,
                           decoration: InputDecoration(
                             labelText: 'Nom d\'utilisateur',
-                            prefixIcon: const Icon(Icons.person_outline),
+                            hintText: 'Entrez votre nom d\'utilisateur',
+                            prefixIcon: const Icon(Icons.person_outline_rounded),
+                            filled: true,
+                            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 2,
+                              ),
                             ),
                           ),
                           validator: (value) {
@@ -113,15 +157,16 @@ class _LoginScreenState extends State<LoginScreen> {
                             return null;
                           },
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 20),
                         
-                        // Password field
+                        // Password field moderne
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
                           decoration: InputDecoration(
                             labelText: 'Mot de passe',
-                            prefixIcon: const Icon(Icons.lock_outline),
+                            hintText: 'Entrez votre mot de passe',
+                            prefixIcon: const Icon(Icons.lock_outline_rounded),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscurePassword 
@@ -132,8 +177,22 @@ class _LoginScreenState extends State<LoginScreen> {
                                 setState(() => _obscurePassword = !_obscurePassword);
                               },
                             ),
+                            filled: true,
+                            fillColor: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 2,
+                              ),
                             ),
                           ),
                           validator: (value) {
@@ -144,19 +203,35 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                           onFieldSubmitted: (_) => _handleLogin(),
                         ),
-                        const SizedBox(height: 8),
                         
                         // Error message
                         Consumer<AuthProvider>(
                           builder: (context, authProvider, _) {
                             if (authProvider.errorMessage != null) {
                               return Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: Text(
-                                  authProvider.errorMessage!,
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.error,
-                                    fontSize: 14,
+                                padding: const EdgeInsets.only(top: 16),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.errorContainer,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.error_outline_rounded,
+                                        color: Theme.of(context).colorScheme.error,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          authProvider.errorMessage!,
+                                          style: TextStyle(
+                                            color: Theme.of(context).colorScheme.error,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               );
@@ -164,64 +239,95 @@ class _LoginScreenState extends State<LoginScreen> {
                             return const SizedBox.shrink();
                           },
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 32),
                         
-                        // Login button
+                        // Login button moderne
                         Consumer<AuthProvider>(
                           builder: (context, authProvider, _) {
                             return SizedBox(
                               width: double.infinity,
-                              height: 50,
+                              height: 56,
                               child: FilledButton(
                                 onPressed: authProvider.isLoading ? null : _handleLogin,
                                 style: FilledButton.styleFrom(
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
+                                  elevation: 4,
                                 ),
                                 child: authProvider.isLoading
                                     ? const SizedBox(
                                         height: 24,
                                         width: 24,
                                         child: CircularProgressIndicator(
-                                          strokeWidth: 2,
+                                          strokeWidth: 2.5,
                                           color: Colors.white,
                                         ),
                                       )
-                                    : const Text(
-                                        'Se connecter',
-                                        style: TextStyle(fontSize: 16),
+                                    : Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: const [
+                                          Text(
+                                            'Se connecter',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          SizedBox(width: 8),
+                                          Icon(Icons.arrow_forward_rounded, size: 20),
+                                        ],
                                       ),
                               ),
                             );
                           },
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 32),
                         
-                        // Comptes de test
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Comptes de test :',
-                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
+                        // Divider
+                        Row(
+                          children: [
+                            Expanded(child: Divider(color: Colors.grey.shade300)),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                'Accès rapide',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 12,
                                 ),
                               ),
-                              const SizedBox(height: 8),
-                              _buildTestAccount('Admin', 'admin', 'admin123'),
-                              const SizedBox(height: 4),
-                              _buildTestAccount('Caissier', 'caissier', 'caissier123'),
-                              const SizedBox(height: 4),
-                              _buildTestAccount('Caissier', 'marie', 'marie123'),
-                            ],
-                          ),
+                            ),
+                            Expanded(child: Divider(color: Colors.grey.shade300)),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+                        
+                        // Boutons d'accès rapide modernes
+                        Wrap(
+                          spacing: 12,
+                          runSpacing: 12,
+                          alignment: WrapAlignment.center,
+                          children: [
+                            _QuickLoginButton(
+                              icon: Icons.admin_panel_settings_rounded,
+                              label: 'Admin',
+                              color: Colors.orange,
+                              onTap: () => _quickLogin('admin', 'admin123'),
+                            ),
+                            _QuickLoginButton(
+                              icon: Icons.person_rounded,
+                              label: 'Caissier',
+                              color: Colors.blue,
+                              onTap: () => _quickLogin('caissier', 'caissier123'),
+                            ),
+                            _QuickLoginButton(
+                              icon: Icons.person_rounded,
+                              label: 'Marie',
+                              color: Colors.purple,
+                              onTap: () => _quickLogin('marie', 'marie123'),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -234,31 +340,49 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+}
 
-  Widget _buildTestAccount(String role, String username, String password) {
-    return Row(
-      children: [
-        Icon(
-          role == 'Admin' ? Icons.admin_panel_settings : Icons.person,
-          size: 16,
-          color: Colors.grey,
+class _QuickLoginButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickLoginButton({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            '$role: ',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+          ],
         ),
-        Text(
-          '$username / $password',
-          style: const TextStyle(
-            fontSize: 12,
-            fontFamily: 'monospace',
-            color: Colors.grey,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
