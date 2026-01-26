@@ -27,19 +27,22 @@ class _ProductsScreenState extends State<ProductsScreen> {
         children: [
           if (isDesktop) _buildDesktopSidebar(context),
           Expanded(
-            child: CustomScrollView(
-              slivers: [
-                _buildAppBar(context, isDesktop),
-                SliverPadding(
-                  padding: EdgeInsets.all(isDesktop ? 40 : 20),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      _buildHeader(context),
-                      const SizedBox(height: 24),
-                      _buildFilters(context),
-                      const SizedBox(height: 24),
-                      _buildProductsList(context, isDesktop),
-                    ]),
+            child: Column(
+              children: [
+                _buildTopBar(context, isDesktop),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(isDesktop ? 40 : 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(context),
+                        const SizedBox(height: 32),
+                        _buildFilters(context),
+                        const SizedBox(height: 32),
+                        _buildProductsList(context, isDesktop),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -50,12 +53,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
       floatingActionButton: Consumer<AuthProvider>(
         builder: (context, auth, _) {
           if (!auth.isAdmin) return const SizedBox();
-          return FloatingActionButton.extended(
+          return FloatingActionButton(
             onPressed: () => _showProductDialog(context, null),
-            icon: const Icon(Icons.add),
-            label: const Text('Nouveau produit'),
             backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Colors.white,
+            child: const Icon(Icons.add, color: Colors.white),
           );
         },
       ),
@@ -73,142 +74,98 @@ class _ProductsScreenState extends State<ProductsScreen> {
           ),
         ),
       ),
-      child: Consumer<AuthProvider>(
-        builder: (context, auth, _) {
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.shopping_bag_outlined,
-                        size: 20,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Shop Manager',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.shopping_bag_outlined, size: 20, color: Colors.white),
                 ),
-              ),
-              Divider(height: 1, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05)),
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(12),
-                  children: [
-                    _SidebarItem(
-                      icon: Icons.home_outlined,
-                      label: 'Accueil',
-                      onTap: () => context.go('/home'),
-                    ),
-                    _SidebarItem(
-                      icon: Icons.inventory_2,
-                      label: 'Produits',
-                      selected: true,
-                      onTap: () {},
-                    ),
-                    _SidebarItem(
-                      icon: Icons.category_outlined,
-                      label: 'Catégories',
-                      onTap: () => context.go('/categories'),
-                    ),
-                  ],
+                const SizedBox(width: 12),
+                Text(
+                  'Shop Manager',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
-              ),
-            ],
-          );
-        },
+              ],
+            ),
+          ),
+          Divider(height: 1, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05)),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(12),
+              children: [
+                _SidebarItem(icon: Icons.home_outlined, label: 'Accueil', onTap: () => context.go('/home')),
+                _SidebarItem(icon: Icons.inventory_2, label: 'Produits', selected: true, onTap: () {}),
+                _SidebarItem(icon: Icons.category_outlined, label: 'Catégories', onTap: () => context.go('/categories')),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildAppBar(BuildContext context, bool isDesktop) {
-    return SliverAppBar(
-      floating: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      elevation: 0,
-      leading: isDesktop
-          ? null
-          : IconButton(
+  Widget _buildTopBar(BuildContext context, bool isDesktop) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: isDesktop ? 40 : 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05)),
+        ),
+      ),
+      child: Row(
+        children: [
+          if (!isDesktop)
+            IconButton(
               icon: const Icon(Icons.arrow_back),
               onPressed: () => context.go('/home'),
             ),
-      actions: [
-        Consumer<AuthProvider>(
-          builder: (context, auth, _) {
-            return IconButton(
-              icon: Icon(
-                auth.themeMode == ThemeMode.dark
-                    ? Icons.light_mode_outlined
-                    : Icons.dark_mode_outlined,
-              ),
-              onPressed: auth.toggleTheme,
-            );
-          },
-        ),
-        const SizedBox(width: 8),
-      ],
+          const Spacer(),
+          Consumer<AuthProvider>(
+            builder: (context, auth, _) {
+              return IconButton(
+                icon: Icon(auth.themeMode == ThemeMode.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
+                onPressed: auth.toggleTheme,
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+    return Consumer<AuthProvider>(
+      builder: (context, auth, _) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.inventory_2,
-                color: Colors.white,
-                size: 24,
+            Text(
+              'Produits',
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                letterSpacing: -1,
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Produits',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Consumer<AuthProvider>(
-                    builder: (context, auth, _) {
-                      return Text(
-                        '${auth.products.length} produit${auth.products.length > 1 ? 's' : ''}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+            const SizedBox(height: 8),
+            Text(
+              '${auth.products.length} produit${auth.products.length > 1 ? 's' : ''} • ${auth.categories.length} catégorie${auth.categories.length > 1 ? 's' : ''}',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
               ),
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -220,16 +177,11 @@ class _ProductsScreenState extends State<ProductsScreen> {
             TextField(
               decoration: InputDecoration(
                 hintText: 'Rechercher un produit...',
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
-                ),
+                prefixIcon: Icon(Icons.search, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
                 filled: true,
                 fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               ),
               onChanged: (value) => setState(() => _searchQuery = value),
             ),
@@ -239,19 +191,24 @@ class _ProductsScreenState extends State<ProductsScreen> {
               child: Row(
                 children: [
                   _FilterChip(
-                    label: 'Tous',
+                    label: 'Tous les produits',
+                    count: auth.products.length,
                     selected: _selectedCategoryFilter == null,
                     onTap: () => setState(() => _selectedCategoryFilter = null),
                   ),
-                  const SizedBox(width: 8),
-                  ...auth.categories.map((cat) => Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: _FilterChip(
-                      label: cat.name,
-                      selected: _selectedCategoryFilter == cat.id,
-                      onTap: () => setState(() => _selectedCategoryFilter = cat.id),
-                    ),
-                  )),
+                  const SizedBox(width: 12),
+                  ...auth.categories.map((cat) {
+                    final count = auth.products.where((p) => p.categoryId == cat.id).length;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: _FilterChip(
+                        label: cat.name,
+                        count: count,
+                        selected: _selectedCategoryFilter == cat.id,
+                        onTap: () => setState(() => _selectedCategoryFilter = cat.id),
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),
@@ -273,43 +230,29 @@ class _ProductsScreenState extends State<ProductsScreen> {
         if (filteredProducts.isEmpty) {
           return Center(
             child: Padding(
-              padding: const EdgeInsets.all(48),
+              padding: const EdgeInsets.all(64),
               child: Column(
                 children: [
-                  Icon(
-                    Icons.inventory_2_outlined,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
-                  ),
+                  Icon(Icons.inventory_2_outlined, size: 64, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2)),
                   const SizedBox(height: 16),
-                  Text(
-                    'Aucun produit trouvé',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                    ),
-                  ),
+                  Text('Aucun produit trouvé', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
                 ],
               ),
             ),
           );
         }
 
-        return GridView.builder(
+        return ListView.separated(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: isDesktop ? 3 : 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: isDesktop ? 0.85 : 0.75,
-          ),
           itemCount: filteredProducts.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
             final product = filteredProducts[index];
             return _ProductCard(
               product: product,
               categoryName: auth.getCategoryName(product.categoryId),
-              onEdit: auth.isAdmin ? () => _showProductDialog(context, product) : null,
+              onTap: auth.isAdmin ? () => _showProductDialog(context, product) : null,
               onDelete: auth.isAdmin ? () => _confirmDelete(context, product) : null,
             );
           },
@@ -319,10 +262,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   void _showProductDialog(BuildContext context, Product? product) {
-    showDialog(
-      context: context,
-      builder: (context) => _ProductDialog(product: product),
-    );
+    showDialog(context: context, builder: (context) => _ProductDialog(product: product));
   }
 
   void _confirmDelete(BuildContext context, Product product) {
@@ -332,21 +272,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
         title: const Text('Supprimer le produit'),
         content: Text('Voulez-vous vraiment supprimer "${product.name}" ?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
           FilledButton(
             onPressed: () {
               context.read<AuthProvider>().deleteProduct(product.id!);
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Produit supprimé')),
-              );
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Produit supprimé')));
             },
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             child: const Text('Supprimer'),
           ),
         ],
@@ -361,12 +294,7 @@ class _SidebarItem extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const _SidebarItem({
-    required this.icon,
-    required this.label,
-    this.selected = false,
-    required this.onTap,
-  });
+  const _SidebarItem({required this.icon, required this.label, this.selected = false, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -377,23 +305,8 @@ class _SidebarItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: ListTile(
-        leading: Icon(
-          icon,
-          size: 20,
-          color: selected
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-        ),
-        title: Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: selected ? FontWeight.w500 : FontWeight.normal,
-            color: selected
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-          ),
-        ),
+        leading: Icon(icon, size: 20, color: selected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+        title: Text(label, style: TextStyle(fontSize: 14, fontWeight: selected ? FontWeight.w500 : FontWeight.normal, color: selected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         dense: true,
         onTap: onTap,
@@ -404,42 +317,54 @@ class _SidebarItem extends StatelessWidget {
 
 class _FilterChip extends StatelessWidget {
   final String label;
+  final int count;
   final bool selected;
   final VoidCallback onTap;
 
-  const _FilterChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
+  const _FilterChip({required this.label, required this.count, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: selected
-              ? Theme.of(context).colorScheme.primaryContainer
-              : Theme.of(context).colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(8),
+          color: selected ? Theme.of(context).colorScheme.primaryContainer : Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected
-                ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+            color: selected ? Theme.of(context).colorScheme.primary.withOpacity(0.3) : Colors.transparent,
           ),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-            color: selected
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: selected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: selected ? Theme.of(context).colorScheme.primary.withOpacity(0.2) : Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: selected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -449,15 +374,10 @@ class _FilterChip extends StatelessWidget {
 class _ProductCard extends StatelessWidget {
   final Product product;
   final String categoryName;
-  final VoidCallback? onEdit;
+  final VoidCallback? onTap;
   final VoidCallback? onDelete;
 
-  const _ProductCard({
-    required this.product,
-    required this.categoryName,
-    this.onEdit,
-    this.onDelete,
-  });
+  const _ProductCard({required this.product, required this.categoryName, this.onTap, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -466,116 +386,89 @@ class _ProductCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
-        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image placeholder
-          Container(
-            height: 120,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            ),
-            child: Center(
-              child: Icon(
-                Icons.inventory_2_outlined,
-                size: 48,
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.inventory_2_outlined, size: 32, color: Theme.of(context).colorScheme.primary.withOpacity(0.6)),
               ),
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.name,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    categoryName,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontSize: 11,
-                    ),
-                  ),
-                  const Spacer(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${product.price.toStringAsFixed(0)} FCFA',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: isLowStock ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          'Stock: ${product.stock}',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: isLowStock ? Colors.red : Colors.green,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (onEdit != null || onDelete != null) ...[
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
                     Row(
                       children: [
-                        if (onEdit != null)
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: onEdit,
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 8),
-                                side: BorderSide(
-                                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                                ),
-                              ),
-                              child: const Text('Modifier', style: TextStyle(fontSize: 12)),
-                            ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primaryContainer,
+                            borderRadius: BorderRadius.circular(6),
                           ),
-                        if (onEdit != null && onDelete != null) const SizedBox(width: 8),
-                        if (onDelete != null)
-                          IconButton(
-                            onPressed: onDelete,
-                            icon: Icon(
-                              Icons.delete_outline,
-                              size: 20,
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                            style: IconButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.errorContainer.withOpacity(0.3),
-                            ),
+                          child: Text(
+                            categoryName,
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Theme.of(context).colorScheme.primary),
                           ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: isLowStock ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            'Stock: ${product.stock}',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: isLowStock ? Colors.red : Colors.green),
+                          ),
+                        ),
                       ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 20),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${product.price.toStringAsFixed(0)} FCFA',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  if (onDelete != null) ...[
+                    const SizedBox(height: 8),
+                    IconButton(
+                      onPressed: onDelete,
+                      icon: Icon(Icons.delete_outline, size: 20, color: Theme.of(context).colorScheme.error),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.errorContainer.withOpacity(0.3),
+                        padding: const EdgeInsets.all(8),
+                      ),
                     ),
                   ],
                 ],
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -583,7 +476,6 @@ class _ProductCard extends StatelessWidget {
 
 class _ProductDialog extends StatefulWidget {
   final Product? product;
-
   const _ProductDialog({this.product});
 
   @override
@@ -631,44 +523,27 @@ class _ProductDialogState extends State<_ProductDialog> {
                 children: [
                   TextFormField(
                     controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nom du produit',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Nom du produit', border: OutlineInputBorder()),
                     validator: (v) => v!.isEmpty ? 'Requis' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _descriptionController,
-                    decoration: const InputDecoration(
-                      labelText: 'Description',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Description', border: OutlineInputBorder()),
                     maxLines: 2,
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<int>(
                     value: _selectedCategoryId,
-                    decoration: const InputDecoration(
-                      labelText: 'Catégorie',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: auth.categories.map((cat) {
-                      return DropdownMenuItem(
-                        value: cat.id,
-                        child: Text(cat.name),
-                      );
-                    }).toList(),
+                    decoration: const InputDecoration(labelText: 'Catégorie', border: OutlineInputBorder()),
+                    items: auth.categories.map((cat) => DropdownMenuItem(value: cat.id, child: Text(cat.name))).toList(),
                     onChanged: (value) => setState(() => _selectedCategoryId = value),
                     validator: (v) => v == null ? 'Requis' : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _priceController,
-                    decoration: const InputDecoration(
-                      labelText: 'Prix (FCFA)',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Prix (FCFA)', border: OutlineInputBorder()),
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     validator: (v) => v!.isEmpty ? 'Requis' : null,
@@ -676,10 +551,7 @@ class _ProductDialogState extends State<_ProductDialog> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _stockController,
-                    decoration: const InputDecoration(
-                      labelText: 'Stock',
-                      border: OutlineInputBorder(),
-                    ),
+                    decoration: const InputDecoration(labelText: 'Stock', border: OutlineInputBorder()),
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     validator: (v) => v!.isEmpty ? 'Requis' : null,
@@ -691,14 +563,8 @@ class _ProductDialogState extends State<_ProductDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Annuler'),
-        ),
-        FilledButton(
-          onPressed: _save,
-          child: const Text('Enregistrer'),
-        ),
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
+        FilledButton(onPressed: _save, child: const Text('Enregistrer')),
       ],
     );
   }
@@ -723,10 +589,6 @@ class _ProductDialogState extends State<_ProductDialog> {
     }
 
     Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(widget.product == null ? 'Produit ajouté' : 'Produit modifié'),
-      ),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(widget.product == null ? 'Produit ajouté' : 'Produit modifié')));
   }
 }

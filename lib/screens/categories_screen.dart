@@ -18,17 +18,20 @@ class CategoriesScreen extends StatelessWidget {
         children: [
           if (isDesktop) _buildDesktopSidebar(context),
           Expanded(
-            child: CustomScrollView(
-              slivers: [
-                _buildAppBar(context, isDesktop),
-                SliverPadding(
-                  padding: EdgeInsets.all(isDesktop ? 40 : 20),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      _buildHeader(context),
-                      const SizedBox(height: 24),
-                      _buildCategoriesList(context, isDesktop),
-                    ]),
+            child: Column(
+              children: [
+                _buildTopBar(context, isDesktop),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(isDesktop ? 40 : 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(context),
+                        const SizedBox(height: 32),
+                        _buildCategoriesList(context, isDesktop),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -39,12 +42,10 @@ class CategoriesScreen extends StatelessWidget {
       floatingActionButton: Consumer<AuthProvider>(
         builder: (context, auth, _) {
           if (!auth.isAdmin) return const SizedBox();
-          return FloatingActionButton.extended(
+          return FloatingActionButton(
             onPressed: () => _showCategoryDialog(context, null),
-            icon: const Icon(Icons.add),
-            label: const Text('Nouvelle catégorie'),
             backgroundColor: Theme.of(context).colorScheme.primary,
-            foregroundColor: Colors.white,
+            child: const Icon(Icons.add, color: Colors.white),
           );
         },
       ),
@@ -75,18 +76,12 @@ class CategoriesScreen extends StatelessWidget {
                     color: Theme.of(context).colorScheme.primary,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
-                    Icons.shopping_bag_outlined,
-                    size: 20,
-                    color: Colors.white,
-                  ),
+                  child: const Icon(Icons.shopping_bag_outlined, size: 20, color: Colors.white),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   'Shop Manager',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -96,22 +91,9 @@ class CategoriesScreen extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.all(12),
               children: [
-                _SidebarItem(
-                  icon: Icons.home_outlined,
-                  label: 'Accueil',
-                  onTap: () => context.go('/home'),
-                ),
-                _SidebarItem(
-                  icon: Icons.inventory_2,
-                  label: 'Produits',
-                  onTap: () => context.go('/products'),
-                ),
-                _SidebarItem(
-                  icon: Icons.category_outlined,
-                  label: 'Catégories',
-                  selected: true,
-                  onTap: () {},
-                ),
+                _SidebarItem(icon: Icons.home_outlined, label: 'Accueil', onTap: () => context.go('/home')),
+                _SidebarItem(icon: Icons.inventory_2, label: 'Produits', onTap: () => context.go('/products')),
+                _SidebarItem(icon: Icons.category_outlined, label: 'Catégories', selected: true, onTap: () {}),
               ],
             ),
           ),
@@ -120,75 +102,59 @@ class CategoriesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAppBar(BuildContext context, bool isDesktop) {
-    return SliverAppBar(
-      floating: true,
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      elevation: 0,
-      leading: isDesktop
-          ? null
-          : IconButton(
+  Widget _buildTopBar(BuildContext context, bool isDesktop) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: isDesktop ? 40 : 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05)),
+        ),
+      ),
+      child: Row(
+        children: [
+          if (!isDesktop)
+            IconButton(
               icon: const Icon(Icons.arrow_back),
               onPressed: () => context.go('/home'),
             ),
-      actions: [
-        Consumer<AuthProvider>(
-          builder: (context, auth, _) {
-            return IconButton(
-              icon: Icon(
-                auth.themeMode == ThemeMode.dark
-                    ? Icons.light_mode_outlined
-                    : Icons.dark_mode_outlined,
-              ),
-              onPressed: auth.toggleTheme,
-            );
-          },
-        ),
-        const SizedBox(width: 8),
-      ],
+          const Spacer(),
+          Consumer<AuthProvider>(
+            builder: (context, auth, _) {
+              return IconButton(
+                icon: Icon(auth.themeMode == ThemeMode.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
+                onPressed: auth.toggleTheme,
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Icon(
-            Icons.category,
-            color: Colors.white,
-            size: 24,
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Catégories',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+    return Consumer<AuthProvider>(
+      builder: (context, auth, _) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Catégories',
+              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                letterSpacing: -1,
               ),
-              Consumer<AuthProvider>(
-                builder: (context, auth, _) {
-                  return Text(
-                    '${auth.categories.length} catégorie${auth.categories.length > 1 ? 's' : ''}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                    ),
-                  );
-                },
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${auth.categories.length} catégorie${auth.categories.length > 1 ? 's' : ''} • ${auth.products.length} produit${auth.products.length > 1 ? 's' : ''}',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
               ),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -198,21 +164,12 @@ class CategoriesScreen extends StatelessWidget {
         if (auth.categories.isEmpty) {
           return Center(
             child: Padding(
-              padding: const EdgeInsets.all(48),
+              padding: const EdgeInsets.all(64),
               child: Column(
                 children: [
-                  Icon(
-                    Icons.category_outlined,
-                    size: 64,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
-                  ),
+                  Icon(Icons.category_outlined, size: 64, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2)),
                   const SizedBox(height: 16),
-                  Text(
-                    'Aucune catégorie',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                    ),
-                  ),
+                  Text('Aucune catégorie', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
                 ],
               ),
             ),
@@ -226,7 +183,7 @@ class CategoriesScreen extends StatelessWidget {
             crossAxisCount: isDesktop ? 4 : 2,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            childAspectRatio: 1.2,
+            childAspectRatio: 1.3,
           ),
           itemCount: auth.categories.length,
           itemBuilder: (context, index) {
@@ -235,7 +192,7 @@ class CategoriesScreen extends StatelessWidget {
             return _CategoryCard(
               category: category,
               productCount: productCount,
-              onEdit: auth.isAdmin ? () => _showCategoryDialog(context, category) : null,
+              onTap: auth.isAdmin ? () => _showCategoryDialog(context, category) : null,
               onDelete: auth.isAdmin ? () => _confirmDelete(context, category) : null,
             );
           },
@@ -245,10 +202,7 @@ class CategoriesScreen extends StatelessWidget {
   }
 
   void _showCategoryDialog(BuildContext context, Category? category) {
-    showDialog(
-      context: context,
-      builder: (context) => _CategoryDialog(category: category),
-    );
+    showDialog(context: context, builder: (context) => _CategoryDialog(category: category));
   }
 
   void _confirmDelete(BuildContext context, Category category) {
@@ -258,21 +212,14 @@ class CategoriesScreen extends StatelessWidget {
         title: const Text('Supprimer la catégorie'),
         content: Text('Voulez-vous vraiment supprimer "${category.name}" ?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
           FilledButton(
             onPressed: () {
               context.read<AuthProvider>().deleteCategory(category.id!);
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Catégorie supprimée')),
-              );
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Catégorie supprimée')));
             },
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             child: const Text('Supprimer'),
           ),
         ],
@@ -287,12 +234,7 @@ class _SidebarItem extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
-  const _SidebarItem({
-    required this.icon,
-    required this.label,
-    this.selected = false,
-    required this.onTap,
-  });
+  const _SidebarItem({required this.icon, required this.label, this.selected = false, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -303,23 +245,8 @@ class _SidebarItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: ListTile(
-        leading: Icon(
-          icon,
-          size: 20,
-          color: selected
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-        ),
-        title: Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: selected ? FontWeight.w500 : FontWeight.normal,
-            color: selected
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-          ),
-        ),
+        leading: Icon(icon, size: 20, color: selected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+        title: Text(label, style: TextStyle(fontSize: 14, fontWeight: selected ? FontWeight.w500 : FontWeight.normal, color: selected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         dense: true,
         onTap: onTap,
@@ -331,92 +258,75 @@ class _SidebarItem extends StatelessWidget {
 class _CategoryCard extends StatelessWidget {
   final Category category;
   final int productCount;
-  final VoidCallback? onEdit;
+  final VoidCallback? onTap;
   final VoidCallback? onDelete;
 
-  const _CategoryCard({
-    required this.category,
-    required this.productCount,
-    this.onEdit,
-    this.onDelete,
-  });
+  const _CategoryCard({required this.category, required this.productCount, this.onTap, this.onDelete});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-        ),
+        border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(Icons.category, size: 24, color: Theme.of(context).colorScheme.primary),
+                  ),
+                  if (onDelete != null)
+                    IconButton(
+                      onPressed: onDelete,
+                      icon: Icon(Icons.delete_outline, size: 18, color: Theme.of(context).colorScheme.error),
+                      style: IconButton.styleFrom(
+                        backgroundColor: Theme.of(context).colorScheme.errorContainer.withOpacity(0.3),
+                        padding: const EdgeInsets.all(6),
+                      ),
+                    ),
+                ],
+              ),
+              const Spacer(),
+              Text(
+                category.name,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                child: Icon(
-                  Icons.category,
-                  size: 22,
-                  color: Theme.of(context).colorScheme.primary,
+                child: Text(
+                  '$productCount produit${productCount > 1 ? 's' : ''}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ),
-              if (onEdit != null || onDelete != null)
-                PopupMenuButton(
-                  icon: const Icon(Icons.more_vert, size: 20),
-                  itemBuilder: (context) => [
-                    if (onEdit != null)
-                      PopupMenuItem(
-                        onTap: onEdit,
-                        child: const Row(
-                          children: [
-                            Icon(Icons.edit, size: 18),
-                            SizedBox(width: 12),
-                            Text('Modifier'),
-                          ],
-                        ),
-                      ),
-                    if (onDelete != null)
-                      PopupMenuItem(
-                        onTap: onDelete,
-                        child: Row(
-                          children: [
-                            Icon(Icons.delete, size: 18, color: Theme.of(context).colorScheme.error),
-                            const SizedBox(width: 12),
-                            Text('Supprimer', style: TextStyle(color: Theme.of(context).colorScheme.error)),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
             ],
           ),
-          const Spacer(),
-          Text(
-            category.name,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '$productCount produit${productCount > 1 ? 's' : ''}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -424,7 +334,6 @@ class _CategoryCard extends StatelessWidget {
 
 class _CategoryDialog extends StatefulWidget {
   final Category? category;
-
   const _CategoryDialog({this.category});
 
   @override
@@ -461,33 +370,21 @@ class _CategoryDialogState extends State<_CategoryDialog> {
           children: [
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Nom de la catégorie',
-                border: OutlineInputBorder(),
-              ),
+              decoration: const InputDecoration(labelText: 'Nom de la catégorie', border: OutlineInputBorder()),
               validator: (v) => v!.isEmpty ? 'Requis' : null,
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Description (optionnelle)',
-                border: OutlineInputBorder(),
-              ),
+              decoration: const InputDecoration(labelText: 'Description (optionnelle)', border: OutlineInputBorder()),
               maxLines: 2,
             ),
           ],
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Annuler'),
-        ),
-        FilledButton(
-          onPressed: _save,
-          child: const Text('Enregistrer'),
-        ),
+        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
+        FilledButton(onPressed: _save, child: const Text('Enregistrer')),
       ],
     );
   }
@@ -509,10 +406,6 @@ class _CategoryDialogState extends State<_CategoryDialog> {
     }
 
     Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(widget.category == null ? 'Catégorie ajoutée' : 'Catégorie modifiée'),
-      ),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(widget.category == null ? 'Catégorie ajoutée' : 'Catégorie modifiée')));
   }
 }
