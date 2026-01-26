@@ -2,48 +2,45 @@ name: Build Flutter for Windows
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    branches: [ main ] # Ou 'master' si c'est le nom de votre branche principale
+  workflow_dispatch: # Permet toujours de lancer manuellement depuis l'onglet Actions
 
 jobs:
   build:
     runs-on: windows-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
-      
+
       - name: Install Flutter dependencies
         run: flutter pub get
-      
+
       - name: Build Flutter (Release)
         run: flutter build windows --release
-      
-      - name: Download VC++ Redistributable
-        run: |
-          $vcRedistUrl = "https://aka.ms/vs/17/release/vc_redist.x64.exe"
-          $outputPath = "installer/vc_redist.x64.exe"
-          New-Item -ItemType Directory -Force -Path installer
-          Invoke-WebRequest -Uri $vcRedistUrl -OutFile $outputPath
-          Write-Host "VC++ Redistributable downloaded to $outputPath"
-      
+
       - name: Install Inno Setup
         run: |
+          # Download and install Inno Setup silently
           $innoSetupUrl = "https://files.jrsoftware.org/is/6/innosetup-6.2.2.exe"
           $innoSetupInstaller = "innosetup-installer.exe"
           Invoke-WebRequest -Uri $innoSetupUrl -OutFile $innoSetupInstaller
           Start-Process -FilePath $innoSetupInstaller -ArgumentList "/SILENT", "/NOCANCEL", "/SUPPRESSMSGBOXES", "/NORESTART" -Wait
+          # Add Inno Setup to the PATH
           $innoPath = "${env:ProgramFiles(x86)}\Inno Setup 6"
+          echo "Adding Inno Setup to PATH: $innoPath"
           echo "$innoPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-      
+
       - name: Create Installer
-        run: iscc.exe "installer/windows_installer.iss"
-      
+        run: |
+          # Compile the Inno Setup script
+          iscc.exe "installer/windows_installer.iss"
+
       - name: Upload Installer Artifact
         uses: actions/upload-artifact@v4
         with:
