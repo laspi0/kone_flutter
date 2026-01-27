@@ -413,6 +413,8 @@ class _SaleListItem extends StatelessWidget {
               fontWeight: FontWeight.bold,
               color: Theme.of(context).colorScheme.primary,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -427,6 +429,8 @@ class _SaleListItem extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 color: Colors.green,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
