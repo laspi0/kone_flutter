@@ -68,3 +68,5 @@ jobs:
         with:
           name: shop-manager-installer-dev-x64
           path: installer/Output/shop_manager_setup.exe
+
+#update
