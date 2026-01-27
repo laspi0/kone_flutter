@@ -12,7 +12,9 @@ class AuthProvider extends ChangeNotifier {
   List<Category> _categories = [];
   List<Sale> _sales = [];
   List<CartItem> _cart = [];
-  
+  List<Customer> _customers = [];
+  Customer? _selectedCustomer;
+
   final DatabaseHelper _db = DatabaseHelper.instance;
 
   // Getters
@@ -24,11 +26,13 @@ class AuthProvider extends ChangeNotifier {
   List<Category> get categories => _categories;
   List<Sale> get sales => _sales;
   List<CartItem> get cart => _cart;
-  
+  List<Customer> get customers => _customers;
+  Customer? get selectedCustomer => _selectedCustomer;
+
   bool get isLoggedIn => _currentUser != null;
   bool get isAdmin => _currentUser?.isAdmin ?? false;
   bool get isCashier => _currentUser?.isCashier ?? false;
-  
+
   double get cartTotal => _cart.fold(0, (sum, item) => sum + item.subtotal);
   int get cartItemCount => _cart.fold(0, (sum, item) => sum + item.quantity);
 
@@ -40,7 +44,7 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       final user = await _db.login(username, password);
-      
+
       if (user != null) {
         _currentUser = user;
         await _loadData();
@@ -65,6 +69,7 @@ class AuthProvider extends ChangeNotifier {
     await loadCategories();
     await loadProducts();
     await loadSales();
+    await loadCustomers();
   }
 
   void logout() {
@@ -74,12 +79,14 @@ class AuthProvider extends ChangeNotifier {
     _categories = [];
     _sales = [];
     _cart = [];
+    _customers = [];
+    _selectedCustomer = null;
     notifyListeners();
   }
 
   void toggleTheme() {
-    _themeMode = _themeMode == ThemeMode.light 
-        ? ThemeMode.dark 
+    _themeMode = _themeMode == ThemeMode.light
+        ? ThemeMode.dark
         : ThemeMode.light;
     notifyListeners();
   }
@@ -142,8 +149,10 @@ class AuthProvider extends ChangeNotifier {
 
   // Cart operations
   void addToCart(Product product) {
-    final existingIndex = _cart.indexWhere((item) => item.product.id == product.id);
-    
+    final existingIndex = _cart.indexWhere(
+      (item) => item.product.id == product.id,
+    );
+
     if (existingIndex >= 0) {
       if (_cart[existingIndex].quantity < product.stock) {
         _cart[existingIndex].quantity++;
@@ -161,7 +170,7 @@ class AuthProvider extends ChangeNotifier {
 
   void updateCartQuantity(Product product, int quantity) {
     final index = _cart.indexWhere((item) => item.product.id == product.id);
-    
+
     if (index >= 0) {
       if (quantity <= 0) {
         _cart.removeAt(index);
@@ -180,35 +189,70 @@ class AuthProvider extends ChangeNotifier {
   // Sales operations
   Future<bool> completeSale() async {
     if (_cart.isEmpty || _currentUser == null) return false;
-    
+
+    // Si aucun client sélectionné, utiliser "Client au comptoir"
+    final customer = _selectedCustomer ?? Customer.walkin;
+
     try {
       final sale = Sale(
         date: DateTime.now(),
         userId: _currentUser!.id!,
         total: cartTotal,
+        customerId: customer.id, // Ajout de l'ID du client
       );
-      
-      final items = _cart.map((cartItem) => SaleItem(
-        saleId: 0,
-        productId: cartItem.product.id!,
-        productName: cartItem.product.name,
-        quantity: cartItem.quantity,
-        unitPrice: cartItem.product.price,
-        subtotal: cartItem.subtotal,
-      )).toList();
-      
+
+      final items = _cart
+          .map(
+            (cartItem) => SaleItem(
+              saleId: 0,
+              productId: cartItem.product.id!,
+              productName: cartItem.product.name,
+              quantity: cartItem.quantity,
+              unitPrice: cartItem.product.price,
+              subtotal: cartItem.subtotal,
+            ),
+          )
+          .toList();
+
       await _db.createSale(sale, items);
-      
+
+      _selectedCustomer = null; // Reset client
       clearCart();
       await loadProducts();
       await loadSales();
-      
+
       return true;
     } catch (e) {
       _errorMessage = 'Erreur lors de la vente: $e';
       notifyListeners();
       return false;
     }
+  }
+
+  // Customer operations
+  Future<void> loadCustomers() async {
+    _customers = await _db.getCustomers();
+    notifyListeners();
+  }
+
+  Future<void> addCustomer(Customer customer) async {
+    await _db.insertCustomer(customer);
+    await loadCustomers();
+  }
+
+  Future<void> updateCustomer(Customer customer) async {
+    await _db.updateCustomer(customer);
+    await loadCustomers();
+  }
+
+  Future<void> deleteCustomer(int id) async {
+    await _db.deleteCustomer(id);
+    await loadCustomers();
+  }
+
+  void selectCustomer(Customer? customer) {
+    _selectedCustomer = customer;
+    notifyListeners();
   }
 
   Future<void> loadSales() async {

@@ -38,18 +38,10 @@ class Category {
   final String name;
   final String? description;
 
-  Category({
-    this.id,
-    required this.name,
-    this.description,
-  });
+  Category({this.id, required this.name, this.description});
 
   Map<String, dynamic> toMap() {
-    return {
-      'id': id,
-      'name': name,
-      'description': description,
-    };
+    return {'id': id, 'name': name, 'description': description};
   }
 
   factory Category.fromMap(Map<String, dynamic> map) {
@@ -107,6 +99,7 @@ class Sale {
   final int? id;
   final DateTime date;
   final int userId;
+  final int? customerId; // Nouveau champ pour le client
   final double total;
   final String status;
 
@@ -114,6 +107,7 @@ class Sale {
     this.id,
     required this.date,
     required this.userId,
+    this.customerId,
     required this.total,
     this.status = 'completed',
   });
@@ -123,6 +117,7 @@ class Sale {
       'id': id,
       'date': date.toIso8601String(),
       'user_id': userId,
+      'customer_id': customerId,
       'total': total,
       'status': status,
     };
@@ -133,6 +128,7 @@ class Sale {
       id: map['id'],
       date: DateTime.parse(map['date']),
       userId: map['user_id'],
+      customerId: map['customer_id'],
       total: (map['total'] as num).toDouble(),
       status: map['status'],
     );
@@ -187,10 +183,44 @@ class CartItem {
   final Product product;
   int quantity;
 
-  CartItem({
-    required this.product,
-    this.quantity = 1,
-  });
+  CartItem({required this.product, this.quantity = 1});
 
   double get subtotal => product.price * quantity;
+}
+
+// À AJOUTER dans models.dart
+
+class Customer {
+  final int? id;
+  final String name;
+  final String? phone;
+  final String? email;
+  final String? address;
+
+  Customer({this.id, required this.name, this.phone, this.email, this.address});
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'phone': phone,
+      'email': email,
+      'address': address,
+    };
+  }
+
+  factory Customer.fromMap(Map<String, dynamic> map) {
+    return Customer(
+      id: map['id'],
+      name: map['name'],
+      phone: map['phone'],
+      email: map['email'],
+      address: map['address'],
+    );
+  }
+
+  // Client spécial pour les ventes au comptoir
+  static Customer get walkin => Customer(id: 0, name: 'Client au comptoir');
+
+  bool get isWalkin => id == 0;
 }

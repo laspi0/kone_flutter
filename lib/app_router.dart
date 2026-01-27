@@ -4,6 +4,8 @@ import 'screens/home_screen.dart';
 import 'screens/products_screen.dart';
 import 'screens/categories_screen.dart';
 import 'screens/sales_screen.dart';
+import 'screens/sale_history_screen.dart';
+import 'screens/customers_screen.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -11,23 +13,25 @@ class AppRouter {
     routes: [
       GoRoute(
         path: '/login',
-        builder: (context, state) => const LoginScreen(),
+        pageBuilder: (context, state) => const NoTransitionPage(child: LoginScreen()),
       ),
-      GoRoute(
-        path: '/home',
-        builder: (context, state) => const HomeScreen(),
-      ),
+      GoRoute(path: '/home', pageBuilder: (context, state) => const NoTransitionPage(child: HomeScreen())),
       GoRoute(
         path: '/products',
-        builder: (context, state) => const ProductsScreen(),
+        pageBuilder: (context, state) => const NoTransitionPage(child: ProductsScreen()),
       ),
+      GoRoute(
+  path: '/customers',
+  builder: (context, state) => const CustomersScreen(),
+),
       GoRoute(
         path: '/categories',
-        builder: (context, state) => const CategoriesScreen(),
+        pageBuilder: (context, state) => const NoTransitionPage(child: CategoriesScreen()),
       ),
+      GoRoute(path: '/sales', pageBuilder: (context, state) => const NoTransitionPage(child: SalesScreen())),
       GoRoute(
-        path: '/sales',
-        builder: (context, state) => const SalesScreen(),
+        path: '/sale-history',
+        pageBuilder: (context, state) => const NoTransitionPage(child: SaleHistoryScreen()),
       ),
     ],
   );

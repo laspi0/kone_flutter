@@ -7,6 +7,8 @@ import 'models.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
+  static const int databaseVersion =
+      5; // Mise à jour de la version de la base de données
 
   DatabaseHelper._init();
 
@@ -19,7 +21,7 @@ class DatabaseHelper {
   Future<Database> _initDB(String filePath) async {
     final documentsDir = await getApplicationDocumentsDirectory();
     final path = join(documentsDir.path, filePath);
-    
+
     final directory = Directory(documentsDir.path);
     if (!await directory.exists()) {
       await directory.create(recursive: true);
@@ -27,7 +29,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3, // CHANGÉ À 3 pour les nouvelles tables
+      version: databaseVersion, // Version mise à jour pour inclure les clients
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -58,7 +60,7 @@ class DatabaseHelper {
       await _insertDefaultCategories(db);
       await _insertDefaultProducts(db);
     }
-    
+
     if (oldVersion < 3) {
       // Ajouter les tables sales
       await db.execute('''
@@ -86,6 +88,30 @@ class DatabaseHelper {
         )
       ''');
     }
+
+    if (oldVersion < 4) {
+      // Add customers table
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS customers (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL,
+          phone TEXT,
+          email TEXT,
+          address TEXT
+        )
+      ''');
+
+      // Add customer_id column to sales table if it doesn't exist
+      try {
+        await db.execute(
+          'ALTER TABLE sales ADD COLUMN customer_id INTEGER REFERENCES customers(id)',
+        );
+      } catch (e) {
+        // Column might already exist, ignore the error
+      }
+
+      await _insertDefaultCustomers(db);
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -95,6 +121,16 @@ class DatabaseHelper {
         username TEXT NOT NULL UNIQUE,
         password_hash TEXT NOT NULL,
         role TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE customers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        phone TEXT,
+        email TEXT,
+        address TEXT
       )
     ''');
 
@@ -123,9 +159,11 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         date TEXT NOT NULL,
         user_id INTEGER NOT NULL,
+        customer_id INTEGER,
         total REAL NOT NULL,
         status TEXT NOT NULL,
-        FOREIGN KEY (user_id) REFERENCES users (id)
+        FOREIGN KEY (user_id) REFERENCES users (id),
+        FOREIGN KEY (customer_id) REFERENCES customers (id)
       )
     ''');
 
@@ -144,6 +182,7 @@ class DatabaseHelper {
     ''');
 
     await _insertDefaultData(db);
+    await _insertDefaultCustomers(db);
   }
 
   Future _insertDefaultData(Database db) async {
@@ -158,7 +197,7 @@ class DatabaseHelper {
       'password_hash': 'caissier123',
       'role': 'cashier',
     });
-    
+
     await db.insert('users', {
       'username': 'marie',
       'password_hash': 'marie123',
@@ -189,6 +228,27 @@ class DatabaseHelper {
     await db.insert('categories', {
       'name': 'Sport',
       'description': 'Équipements sportifs',
+    });
+  }
+
+  Future _insertDefaultCustomers(Database db) async {
+    await db.insert('customers', {
+      'name': 'Fatou Diallo',
+      'phone': '+221 77 123 45 67',
+      'email': 'fatou.diallo@email.com',
+      'address': 'Dakar, Plateau',
+    });
+    await db.insert('customers', {
+      'name': 'Moussa Sow',
+      'phone': '+221 78 234 56 78',
+      'email': 'moussa.sow@email.com',
+      'address': 'Thiès',
+    });
+    await db.insert('customers', {
+      'name': 'Aminata Ndiaye',
+      'phone': '+221 76 345 67 89',
+      'email': 'aminata.n@email.com',
+      'address': 'Rufisque',
     });
   }
 
@@ -247,7 +307,7 @@ class DatabaseHelper {
   // Auth
   Future<User?> login(String username, String password) async {
     final db = await database;
-    
+
     final maps = await db.query(
       'users',
       where: 'username = ? AND password_hash = ?',
@@ -255,7 +315,7 @@ class DatabaseHelper {
     );
 
     if (maps.isEmpty) return null;
-    
+
     return User.fromMap(maps.first);
   }
 
@@ -333,22 +393,19 @@ class DatabaseHelper {
   // Sales
   Future<int> createSale(Sale sale, List<SaleItem> items) async {
     final db = await database;
-    
+
     return await db.transaction((txn) async {
       final saleId = await txn.insert('sales', sale.toMap());
-      
+
       for (var item in items) {
-        await txn.insert('sale_items', {
-          ...item.toMap(),
-          'sale_id': saleId,
-        });
-        
+        await txn.insert('sale_items', {...item.toMap(), 'sale_id': saleId});
+
         await txn.rawUpdate(
           'UPDATE products SET stock = stock - ? WHERE id = ?',
           [item.quantity, item.productId],
         );
       }
-      
+
       return saleId;
     });
   }
@@ -382,19 +439,49 @@ class DatabaseHelper {
 
   Future<Map<String, dynamic>> getSalesStats() async {
     final db = await database;
-    
-    final totalSales = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM sales WHERE status = "completed"')
-    ) ?? 0;
-    
-    final totalRevenue = (await db.rawQuery(
-      'SELECT SUM(total) as revenue FROM sales WHERE status = "completed"'
-    )).first['revenue'] ?? 0.0;
-    
-    return {
-      'totalSales': totalSales,
-      'totalRevenue': totalRevenue,
-    };
+
+    final totalSales =
+        Sqflite.firstIntValue(
+          await db.rawQuery(
+            'SELECT COUNT(*) FROM sales WHERE status = "completed"',
+          ),
+        ) ??
+        0;
+
+    final totalRevenue =
+        (await db.rawQuery(
+          'SELECT SUM(total) as revenue FROM sales WHERE status = "completed"',
+        )).first['revenue'] ??
+        0.0;
+
+    return {'totalSales': totalSales, 'totalRevenue': totalRevenue};
+  }
+
+  // Customer CRUD operations
+  Future<List<Customer>> getCustomers() async {
+    final db = await database;
+    final maps = await db.query('customers', orderBy: 'name');
+    return maps.map((map) => Customer.fromMap(map)).toList();
+  }
+
+  Future<int> insertCustomer(Customer customer) async {
+    final db = await database;
+    return await db.insert('customers', customer.toMap());
+  }
+
+  Future<int> updateCustomer(Customer customer) async {
+    final db = await database;
+    return await db.update(
+      'customers',
+      customer.toMap(),
+      where: 'id = ?',
+      whereArgs: [customer.id],
+    );
+  }
+
+  Future<int> deleteCustomer(int id) async {
+    final db = await database;
+    return await db.delete('customers', where: 'id = ?', whereArgs: [id]);
   }
 
   Future close() async {

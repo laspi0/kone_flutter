@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../auth_provider.dart';
 import '../models.dart';
+import '../widgets/app_sidebar.dart'; // New import
 
 class CategoriesScreen extends StatelessWidget {
   const CategoriesScreen({super.key});
@@ -16,7 +17,7 @@ class CategoriesScreen extends StatelessWidget {
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Row(
         children: [
-          if (isDesktop) _buildDesktopSidebar(context),
+          if (isDesktop) const AppSidebar(currentPage: '/categories'), // Replaced sidebar
           Expanded(
             child: Column(
               children: [
@@ -52,55 +53,7 @@ class CategoriesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDesktopSidebar(BuildContext context) {
-    return Container(
-      width: 260,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        border: Border(
-          right: BorderSide(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
-          ),
-        ),
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.shopping_bag_outlined, size: 20, color: Colors.white),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Shop Manager',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05)),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.all(12),
-              children: [
-                _SidebarItem(icon: Icons.home_outlined, label: 'Accueil', onTap: () => context.go('/home')),
-                _SidebarItem(icon: Icons.inventory_2, label: 'Produits', onTap: () => context.go('/products')),
-                _SidebarItem(icon: Icons.category_outlined, label: 'Catégories', selected: true, onTap: () {}),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildTopBar(BuildContext context, bool isDesktop) {
     return Container(
@@ -228,32 +181,7 @@ class CategoriesScreen extends StatelessWidget {
   }
 }
 
-class _SidebarItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
 
-  const _SidebarItem({required this.icon, required this.label, this.selected = false, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 4),
-      decoration: BoxDecoration(
-        color: selected ? Theme.of(context).colorScheme.primaryContainer : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: ListTile(
-        leading: Icon(icon, size: 20, color: selected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
-        title: Text(label, style: TextStyle(fontSize: 14, fontWeight: selected ? FontWeight.w500 : FontWeight.normal, color: selected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        dense: true,
-        onTap: onTap,
-      ),
-    );
-  }
-}
 
 class _CategoryCard extends StatelessWidget {
   final Category category;
