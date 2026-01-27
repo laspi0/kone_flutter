@@ -391,11 +391,12 @@ class DatabaseHelper {
   }
 
   // Sales
-  Future<int> createSale(Sale sale, List<SaleItem> items) async {
+  Future<Sale> createSale(Sale sale, List<SaleItem> items) async {
     final db = await database;
 
     return await db.transaction((txn) async {
       final saleId = await txn.insert('sales', sale.toMap());
+      final newSale = sale.copyWith(id: saleId); // Assuming copyWith exists or create new instance
 
       for (var item in items) {
         await txn.insert('sale_items', {...item.toMap(), 'sale_id': saleId});
@@ -406,7 +407,7 @@ class DatabaseHelper {
         );
       }
 
-      return saleId;
+      return newSale;
     });
   }
 
@@ -482,6 +483,17 @@ class DatabaseHelper {
   Future<int> deleteCustomer(int id) async {
     final db = await database;
     return await db.delete('customers', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<Customer?> getCustomerById(int id) async {
+    final db = await database;
+    final maps = await db.query(
+      'customers',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+    if (maps.isEmpty) return null;
+    return Customer.fromMap(maps.first);
   }
 
   Future close() async {

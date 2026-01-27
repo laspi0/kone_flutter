@@ -133,6 +133,24 @@ class Sale {
       status: map['status'],
     );
   }
+
+  Sale copyWith({
+    int? id,
+    DateTime? date,
+    int? userId,
+    int? customerId,
+    double? total,
+    String? status,
+  }) {
+    return Sale(
+      id: id ?? this.id,
+      date: date ?? this.date,
+      userId: userId ?? this.userId,
+      customerId: customerId ?? this.customerId,
+      total: total ?? this.total,
+      status: status ?? this.status,
+    );
+  }
 }
 
 class SaleItem {

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:printing/printing.dart'; // New import
 import '../auth_provider.dart';
 import '../models.dart';
 import '../widgets/app_sidebar.dart';
+import '../services/pdf_service.dart'; // New import
 
 class SalesScreen extends StatefulWidget {
   const SalesScreen({super.key});
@@ -721,9 +723,16 @@ class _SalesScreenState extends State<SalesScreen> {
     );
 
     if (confirmed == true) {
-      final success = await auth.completeSale();
+      final result = await auth.completeSale();
 
-      if (success && context.mounted) {
+      if (result != null && context.mounted) {
+        final Sale sale = result['sale'];
+        final List<SaleItem> saleItems = result['saleItems'];
+        final Customer? customer = result['customer'];
+
+        // Generate PDF
+        final pdfBytes = await PdfService().generateInvoicePdf(sale, saleItems, customer);
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -737,6 +746,13 @@ class _SalesScreenState extends State<SalesScreen> {
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
+            ),
+            action: SnackBarAction(
+              label: 'Voir Facture',
+              onPressed: () {
+                Printing.sharePdf(bytes: pdfBytes, filename: 'facture_${sale.id}.pdf');
+              },
+              textColor: Colors.white,
             ),
           ),
         );

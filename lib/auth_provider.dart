@@ -187,24 +187,24 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // Sales operations
-  Future<bool> completeSale() async {
-    if (_cart.isEmpty || _currentUser == null) return false;
+  Future<Map<String, dynamic>?> completeSale() async {
+    if (_cart.isEmpty || _currentUser == null) return null;
 
-    // Si aucun client sélectionné, utiliser "Client au comptoir"
     final customer = _selectedCustomer ?? Customer.walkin;
+    List<CartItem> currentCart = List.from(_cart); // Create a copy of the cart
 
     try {
       final sale = Sale(
         date: DateTime.now(),
         userId: _currentUser!.id!,
         total: cartTotal,
-        customerId: customer.id, // Ajout de l'ID du client
+        customerId: customer.id == 0 ? null : customer.id, // Store null for walk-in customer
       );
 
-      final items = _cart
+      final items = currentCart
           .map(
             (cartItem) => SaleItem(
-              saleId: 0,
+              saleId: 0, // Will be updated by DB
               productId: cartItem.product.id!,
               productName: cartItem.product.name,
               quantity: cartItem.quantity,
@@ -214,18 +214,25 @@ class AuthProvider extends ChangeNotifier {
           )
           .toList();
 
-      await _db.createSale(sale, items);
+      final createdSale = await _db.createSale(sale, items);
+      final fetchedSaleItems = await _db.getSaleItems(createdSale.id!); // Fetch actual SaleItems with correct saleId
 
       _selectedCustomer = null; // Reset client
       clearCart();
       await loadProducts();
       await loadSales();
 
-      return true;
+      Customer? actualCustomer = customer.id == 0 ? null : await _db.getCustomerById(customer.id!);
+
+      return {
+        'sale': createdSale,
+        'saleItems': fetchedSaleItems,
+        'customer': actualCustomer,
+      };
     } catch (e) {
       _errorMessage = 'Erreur lors de la vente: $e';
       notifyListeners();
-      return false;
+      return null;
     }
   }
 

@@ -13,25 +13,38 @@ class AppRouter {
     routes: [
       GoRoute(
         path: '/login',
-        pageBuilder: (context, state) => const NoTransitionPage(child: LoginScreen()),
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: LoginScreen()),
       ),
-      GoRoute(path: '/home', pageBuilder: (context, state) => const NoTransitionPage(child: HomeScreen())),
+      GoRoute(
+        path: '/home',
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: HomeScreen()),
+      ),
       GoRoute(
         path: '/products',
-        pageBuilder: (context, state) => const NoTransitionPage(child: ProductsScreen()),
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: ProductsScreen()),
       ),
-      GoRoute(
-  path: '/customers',
-  builder: (context, state) => const CustomersScreen(),
-),
       GoRoute(
         path: '/categories',
-        pageBuilder: (context, state) => const NoTransitionPage(child: CategoriesScreen()),
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: CategoriesScreen()),
       ),
-      GoRoute(path: '/sales', pageBuilder: (context, state) => const NoTransitionPage(child: SalesScreen())),
+      GoRoute(
+        path: '/sales',
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: SalesScreen()),
+      ),
+      GoRoute(
+        path: '/customers',
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: CustomersScreen()),
+      ),
       GoRoute(
         path: '/sale-history',
-        pageBuilder: (context, state) => const NoTransitionPage(child: SaleHistoryScreen()),
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: SaleHistoryScreen()),
       ),
     ],
   );
