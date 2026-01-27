@@ -6,6 +6,7 @@ import 'screens/categories_screen.dart';
 import 'screens/sales_screen.dart';
 import 'screens/sale_history_screen.dart';
 import 'screens/customers_screen.dart';
+import 'screens/settings_screen.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -45,6 +46,11 @@ class AppRouter {
         path: '/sale-history',
         pageBuilder: (context, state) =>
             const NoTransitionPage(child: SaleHistoryScreen()),
+      ),
+      GoRoute(
+        path: '/settings',
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: SettingsScreen()),
       ),
     ],
   );

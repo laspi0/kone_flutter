@@ -104,6 +104,33 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // User profile updates
+  Future<void> updateUsername(String newUsername) async {
+    if (_currentUser == null) return;
+
+    final updatedUser = _currentUser!.copyWith(username: newUsername);
+    await _db.updateUser(updatedUser);
+    _currentUser = updatedUser;
+    notifyListeners();
+  }
+
+  Future<bool> changePassword(
+      String currentPassword, String newPassword) async {
+    if (_currentUser == null) return false;
+
+    // NOTE: This is a simple comparison. In a real app, you'd hash
+    // the input and compare the hashes.
+    if (_currentUser!.passwordHash != currentPassword) {
+      return false;
+    }
+
+    final updatedUser = _currentUser!.copyWith(passwordHash: newPassword);
+    await _db.updateUser(updatedUser);
+    _currentUser = updatedUser;
+    notifyListeners();
+    return true;
+  }
+
   // Categories
   Future<void> loadCategories() async {
     _categories = await _db.getCategories();

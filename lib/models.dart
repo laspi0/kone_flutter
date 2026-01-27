@@ -31,6 +31,20 @@ class User {
 
   bool get isAdmin => role == 'admin';
   bool get isCashier => role == 'cashier';
+
+  User copyWith({
+    int? id,
+    String? username,
+    String? passwordHash,
+    String? role,
+  }) {
+    return User(
+      id: id ?? this.id,
+      username: username ?? this.username,
+      passwordHash: passwordHash ?? this.passwordHash,
+      role: role ?? this.role,
+    );
+  }
 }
 
 class Category {

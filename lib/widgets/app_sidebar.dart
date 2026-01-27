@@ -119,6 +119,13 @@ class AppSidebar extends StatelessWidget {
                         onTap: () => context.go('/customers'),
                       ),
                     ],
+                     const SizedBox(height: 8),
+                    SidebarItem(
+                      icon: Icons.settings_outlined,
+                      label: 'Paramètres',
+                      selected: currentPage == '/settings',
+                      onTap: () => context.go('/settings'),
+                    ),
                   ],
                 ),
               ),
