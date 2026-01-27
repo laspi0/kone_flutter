@@ -1,4 +1,3 @@
-// Modèle User pour l'authentification
 class User {
   final int? id;
   final String username;
@@ -12,7 +11,6 @@ class User {
     required this.role,
   });
 
-  // Conversion vers Map pour SQLite
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -22,7 +20,6 @@ class User {
     };
   }
 
-  // Création depuis Map (SQLite)
   factory User.fromMap(Map<String, dynamic> map) {
     return User(
       id: map['id'],
@@ -32,14 +29,10 @@ class User {
     );
   }
 
-  // Vérifier si l'utilisateur est admin
   bool get isAdmin => role == 'admin';
-  
-  // Vérifier si l'utilisateur est caissier
   bool get isCashier => role == 'cashier';
 }
 
-// Modèle Category
 class Category {
   final int? id;
   final String name;
@@ -68,7 +61,6 @@ class Category {
   }
 }
 
-// Modèle Product
 class Product {
   final int? id;
   final String name;
@@ -107,4 +99,98 @@ class Product {
       categoryId: map['category_id'],
     );
   }
+}
+
+// NOUVEAUX MODÈLES POUR VENTES
+
+class Sale {
+  final int? id;
+  final DateTime date;
+  final int userId;
+  final double total;
+  final String status;
+
+  Sale({
+    this.id,
+    required this.date,
+    required this.userId,
+    required this.total,
+    this.status = 'completed',
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'date': date.toIso8601String(),
+      'user_id': userId,
+      'total': total,
+      'status': status,
+    };
+  }
+
+  factory Sale.fromMap(Map<String, dynamic> map) {
+    return Sale(
+      id: map['id'],
+      date: DateTime.parse(map['date']),
+      userId: map['user_id'],
+      total: (map['total'] as num).toDouble(),
+      status: map['status'],
+    );
+  }
+}
+
+class SaleItem {
+  final int? id;
+  final int saleId;
+  final int productId;
+  final String productName;
+  final int quantity;
+  final double unitPrice;
+  final double subtotal;
+
+  SaleItem({
+    this.id,
+    required this.saleId,
+    required this.productId,
+    required this.productName,
+    required this.quantity,
+    required this.unitPrice,
+    required this.subtotal,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'sale_id': saleId,
+      'product_id': productId,
+      'product_name': productName,
+      'quantity': quantity,
+      'unit_price': unitPrice,
+      'subtotal': subtotal,
+    };
+  }
+
+  factory SaleItem.fromMap(Map<String, dynamic> map) {
+    return SaleItem(
+      id: map['id'],
+      saleId: map['sale_id'],
+      productId: map['product_id'],
+      productName: map['product_name'],
+      quantity: map['quantity'],
+      unitPrice: (map['unit_price'] as num).toDouble(),
+      subtotal: (map['subtotal'] as num).toDouble(),
+    );
+  }
+}
+
+class CartItem {
+  final Product product;
+  int quantity;
+
+  CartItem({
+    required this.product,
+    this.quantity = 1,
+  });
+
+  double get subtotal => product.price * quantity;
 }

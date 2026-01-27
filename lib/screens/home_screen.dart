@@ -17,7 +17,7 @@ class HomeScreen extends StatelessWidget {
         children: [
           // Sidebar desktop
           if (isDesktop) const _DesktopSidebar(),
-          
+
           // Main content
           Expanded(
             child: Consumer<AuthProvider>(
@@ -42,7 +42,8 @@ class HomeScreen extends StatelessWidget {
                           : Builder(
                               builder: (context) => IconButton(
                                 icon: const Icon(Icons.menu),
-                                onPressed: () => Scaffold.of(context).openDrawer(),
+                                onPressed: () =>
+                                    Scaffold.of(context).openDrawer(),
                               ),
                             ),
                       actions: [
@@ -58,7 +59,7 @@ class HomeScreen extends StatelessWidget {
                         const SizedBox(width: 8),
                       ],
                     ),
-                    
+
                     // Content
                     SliverPadding(
                       padding: EdgeInsets.all(isDesktop ? 40 : 20),
@@ -67,11 +68,11 @@ class HomeScreen extends StatelessWidget {
                           // Header
                           _buildHeader(context, user),
                           const SizedBox(height: 40),
-                          
+
                           // Stats
                           _buildStats(context, user, isDesktop),
                           const SizedBox(height: 40),
-                          
+
                           // Quick actions
                           _buildQuickActions(context, isDesktop),
                         ]),
@@ -102,7 +103,9 @@ class HomeScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
-                user.isAdmin ? Icons.admin_panel_settings_outlined : Icons.person_outline,
+                user.isAdmin
+                    ? Icons.admin_panel_settings_outlined
+                    : Icons.person_outline,
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
@@ -122,7 +125,9 @@ class HomeScreen extends StatelessWidget {
                   Text(
                     user.isAdmin ? 'Administrateur' : 'Caissier',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.5),
                     ),
                   ),
                 ],
@@ -140,9 +145,9 @@ class HomeScreen extends StatelessWidget {
       children: [
         Text(
           'Vue d\'ensemble',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 16),
         GridView.count(
@@ -187,9 +192,9 @@ class HomeScreen extends StatelessWidget {
       children: [
         Text(
           'Actions rapides',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 16),
         Wrap(
@@ -209,11 +214,7 @@ class HomeScreen extends StatelessWidget {
             _ActionChip(
               label: 'Nouvelle vente',
               icon: Icons.add_shopping_cart_outlined,
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Disponible prochainement')),
-                );
-              },
+              onTap: () => context.go('/sales'),
             ),
           ],
         ),
@@ -264,7 +265,9 @@ class _StatCard extends StatelessWidget {
                 Icon(
                   Icons.lock_outline,
                   size: 16,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.2),
                 ),
             ],
           ),
@@ -284,7 +287,9 @@ class _StatCard extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.5),
                 ),
               ),
             ],
@@ -323,11 +328,7 @@ class _ActionChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 18,
-              color: Theme.of(context).colorScheme.primary,
-            ),
+            Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
             const SizedBox(width: 8),
             Text(
               label,
@@ -394,12 +395,14 @@ class _DesktopSidebar extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               Divider(
                 height: 1,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withOpacity(0.05),
               ),
-              
+
               // Navigation
               Expanded(
                 child: ListView(
@@ -423,12 +426,14 @@ class _DesktopSidebar extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               Divider(
                 height: 1,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withOpacity(0.05),
               ),
-              
+
               // User section
               Padding(
                 padding: const EdgeInsets.all(16),
@@ -444,7 +449,9 @@ class _DesktopSidebar extends StatelessWidget {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Icon(
-                            user.isAdmin ? Icons.admin_panel_settings_outlined : Icons.person_outline,
+                            user.isAdmin
+                                ? Icons.admin_panel_settings_outlined
+                                : Icons.person_outline,
                             size: 20,
                             color: Theme.of(context).colorScheme.onSurface,
                           ),
@@ -456,22 +463,25 @@ class _DesktopSidebar extends StatelessWidget {
                             children: [
                               Text(
                                 user.username,
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(fontWeight: FontWeight.w500),
                               ),
                               Text(
                                 user.isAdmin ? 'Admin' : 'Caissier',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                                ),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.5),
+                                    ),
                               ),
                             ],
                           ),
                         ),
                         IconButton(
                           icon: const Icon(Icons.logout, size: 20),
-                          onPressed: () => _showLogoutDialog(context, authProvider),
+                          onPressed: () =>
+                              _showLogoutDialog(context, authProvider),
                           tooltip: 'Déconnexion',
                         ),
                       ],
@@ -532,7 +542,7 @@ class _SidebarItem extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
-        color: selected 
+        color: selected
             ? Theme.of(context).colorScheme.primaryContainer
             : Colors.transparent,
         borderRadius: BorderRadius.circular(8),
@@ -603,15 +613,17 @@ class _MobileDrawer extends StatelessWidget {
                         children: [
                           Text(
                             user.username,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                           Text(
                             user.isAdmin ? 'Administrateur' : 'Caissier',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.5),
+                                ),
                           ),
                         ],
                       ),
@@ -619,7 +631,7 @@ class _MobileDrawer extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               // Navigation
               Expanded(
                 child: ListView(
@@ -649,7 +661,7 @@ class _MobileDrawer extends StatelessWidget {
                   ],
                 ),
               ),
-              
+
               // Logout
               Padding(
                 padding: const EdgeInsets.all(16),

@@ -20,7 +20,6 @@ class DatabaseHelper {
     final documentsDir = await getApplicationDocumentsDirectory();
     final path = join(documentsDir.path, filePath);
     
-    // Vérifier que le répertoire existe
     final directory = Directory(documentsDir.path);
     if (!await directory.exists()) {
       await directory.create(recursive: true);
@@ -28,7 +27,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3, // CHANGÉ À 3 pour les nouvelles tables
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -36,7 +35,6 @@ class DatabaseHelper {
 
   Future _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      // Créer les nouvelles tables
       await db.execute('''
         CREATE TABLE IF NOT EXISTS categories (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -57,14 +55,40 @@ class DatabaseHelper {
         )
       ''');
 
-      // Insérer les données par défaut
       await _insertDefaultCategories(db);
       await _insertDefaultProducts(db);
+    }
+    
+    if (oldVersion < 3) {
+      // Ajouter les tables sales
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS sales (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          date TEXT NOT NULL,
+          user_id INTEGER NOT NULL,
+          total REAL NOT NULL,
+          status TEXT NOT NULL,
+          FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS sale_items (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          sale_id INTEGER NOT NULL,
+          product_id INTEGER NOT NULL,
+          product_name TEXT NOT NULL,
+          quantity INTEGER NOT NULL,
+          unit_price REAL NOT NULL,
+          subtotal REAL NOT NULL,
+          FOREIGN KEY (sale_id) REFERENCES sales (id),
+          FOREIGN KEY (product_id) REFERENCES products (id)
+        )
+      ''');
     }
   }
 
   Future _createDB(Database db, int version) async {
-    // Création de la table users
     await db.execute('''
       CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -74,7 +98,6 @@ class DatabaseHelper {
       )
     ''');
 
-    // Création de la table categories
     await db.execute('''
       CREATE TABLE categories (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -83,7 +106,6 @@ class DatabaseHelper {
       )
     ''');
 
-    // Création de la table products
     await db.execute('''
       CREATE TABLE products (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,19 +118,41 @@ class DatabaseHelper {
       )
     ''');
 
-    // Insertion des données par défaut
+    await db.execute('''
+      CREATE TABLE sales (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        date TEXT NOT NULL,
+        user_id INTEGER NOT NULL,
+        total REAL NOT NULL,
+        status TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE sale_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sale_id INTEGER NOT NULL,
+        product_id INTEGER NOT NULL,
+        product_name TEXT NOT NULL,
+        quantity INTEGER NOT NULL,
+        unit_price REAL NOT NULL,
+        subtotal REAL NOT NULL,
+        FOREIGN KEY (sale_id) REFERENCES sales (id),
+        FOREIGN KEY (product_id) REFERENCES products (id)
+      )
+    ''');
+
     await _insertDefaultData(db);
   }
 
   Future _insertDefaultData(Database db) async {
-    // Admin par défaut
     await db.insert('users', {
       'username': 'admin',
       'password_hash': 'admin123',
       'role': 'admin',
     });
 
-    // Caissiers par défaut
     await db.insert('users', {
       'username': 'caissier',
       'password_hash': 'caissier123',
@@ -121,7 +165,6 @@ class DatabaseHelper {
       'role': 'cashier',
     });
 
-    // Catégories et produits
     await _insertDefaultCategories(db);
     await _insertDefaultProducts(db);
   }
@@ -201,7 +244,7 @@ class DatabaseHelper {
     });
   }
 
-  // Authentification
+  // Auth
   Future<User?> login(String username, String password) async {
     final db = await database;
     
@@ -216,14 +259,13 @@ class DatabaseHelper {
     return User.fromMap(maps.first);
   }
 
-  // Récupérer tous les utilisateurs (pour admin)
   Future<List<User>> getAllUsers() async {
     final db = await database;
     final maps = await db.query('users', orderBy: 'username');
     return maps.map((map) => User.fromMap(map)).toList();
   }
 
-  // Category operations
+  // Categories
   Future<List<Category>> getCategories() async {
     final db = await database;
     final maps = await db.query('categories', orderBy: 'name');
@@ -250,7 +292,7 @@ class DatabaseHelper {
     return await db.delete('categories', where: 'id = ?', whereArgs: [id]);
   }
 
-  // Product operations
+  // Products
   Future<List<Product>> getProducts() async {
     final db = await database;
     final maps = await db.query('products', orderBy: 'name');
@@ -288,11 +330,75 @@ class DatabaseHelper {
     return await db.delete('products', where: 'id = ?', whereArgs: [id]);
   }
 
-  // Fermer la base de données
+  // Sales
+  Future<int> createSale(Sale sale, List<SaleItem> items) async {
+    final db = await database;
+    
+    return await db.transaction((txn) async {
+      final saleId = await txn.insert('sales', sale.toMap());
+      
+      for (var item in items) {
+        await txn.insert('sale_items', {
+          ...item.toMap(),
+          'sale_id': saleId,
+        });
+        
+        await txn.rawUpdate(
+          'UPDATE products SET stock = stock - ? WHERE id = ?',
+          [item.quantity, item.productId],
+        );
+      }
+      
+      return saleId;
+    });
+  }
+
+  Future<List<Sale>> getSales() async {
+    final db = await database;
+    final maps = await db.query('sales', orderBy: 'date DESC');
+    return maps.map((map) => Sale.fromMap(map)).toList();
+  }
+
+  Future<List<SaleItem>> getSaleItems(int saleId) async {
+    final db = await database;
+    final maps = await db.query(
+      'sale_items',
+      where: 'sale_id = ?',
+      whereArgs: [saleId],
+    );
+    return maps.map((map) => SaleItem.fromMap(map)).toList();
+  }
+
+  Future<List<Sale>> getSalesByUser(int userId) async {
+    final db = await database;
+    final maps = await db.query(
+      'sales',
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'date DESC',
+    );
+    return maps.map((map) => Sale.fromMap(map)).toList();
+  }
+
+  Future<Map<String, dynamic>> getSalesStats() async {
+    final db = await database;
+    
+    final totalSales = Sqflite.firstIntValue(
+      await db.rawQuery('SELECT COUNT(*) FROM sales WHERE status = "completed"')
+    ) ?? 0;
+    
+    final totalRevenue = (await db.rawQuery(
+      'SELECT SUM(total) as revenue FROM sales WHERE status = "completed"'
+    )).first['revenue'] ?? 0.0;
+    
+    return {
+      'totalSales': totalSales,
+      'totalRevenue': totalRevenue,
+    };
+  }
+
   Future close() async {
     final db = await database;
     db.close();
   }
 }
-
-//

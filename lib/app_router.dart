@@ -3,6 +3,7 @@ import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/products_screen.dart';
 import 'screens/categories_screen.dart';
+import 'screens/sales_screen.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -23,6 +24,10 @@ class AppRouter {
       GoRoute(
         path: '/categories',
         builder: (context, state) => const CategoriesScreen(),
+      ),
+      GoRoute(
+        path: '/sales',
+        builder: (context, state) => const SalesScreen(),
       ),
     ],
   );

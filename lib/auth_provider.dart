@@ -8,9 +8,10 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
-  // Products & Categories
   List<Product> _products = [];
   List<Category> _categories = [];
+  List<Sale> _sales = [];
+  List<CartItem> _cart = [];
   
   final DatabaseHelper _db = DatabaseHelper.instance;
 
@@ -21,10 +22,15 @@ class AuthProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   List<Product> get products => _products;
   List<Category> get categories => _categories;
+  List<Sale> get sales => _sales;
+  List<CartItem> get cart => _cart;
   
   bool get isLoggedIn => _currentUser != null;
   bool get isAdmin => _currentUser?.isAdmin ?? false;
   bool get isCashier => _currentUser?.isCashier ?? false;
+  
+  double get cartTotal => _cart.fold(0, (sum, item) => sum + item.subtotal);
+  int get cartItemCount => _cart.fold(0, (sum, item) => sum + item.quantity);
 
   // Login
   Future<bool> login(String username, String password) async {
@@ -55,22 +61,22 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // Load data
   Future<void> _loadData() async {
     await loadCategories();
     await loadProducts();
+    await loadSales();
   }
 
-  // Logout
   void logout() {
     _currentUser = null;
     _errorMessage = null;
     _products = [];
     _categories = [];
+    _sales = [];
+    _cart = [];
     notifyListeners();
   }
 
-  // Toggle theme
   void toggleTheme() {
     _themeMode = _themeMode == ThemeMode.light 
         ? ThemeMode.dark 
@@ -78,7 +84,6 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Clear error
   void clearError() {
     _errorMessage = null;
     notifyListeners();
@@ -103,7 +108,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> deleteCategory(int id) async {
     await _db.deleteCategory(id);
     await loadCategories();
-    await loadProducts(); // Reload products in case some were affected
+    await loadProducts();
   }
 
   // Products
@@ -134,7 +139,87 @@ class AuthProvider extends ChangeNotifier {
     );
     return category.name;
   }
-  
+
+  // Cart operations
+  void addToCart(Product product) {
+    final existingIndex = _cart.indexWhere((item) => item.product.id == product.id);
+    
+    if (existingIndex >= 0) {
+      if (_cart[existingIndex].quantity < product.stock) {
+        _cart[existingIndex].quantity++;
+      }
+    } else {
+      _cart.add(CartItem(product: product));
+    }
+    notifyListeners();
+  }
+
+  void removeFromCart(Product product) {
+    _cart.removeWhere((item) => item.product.id == product.id);
+    notifyListeners();
+  }
+
+  void updateCartQuantity(Product product, int quantity) {
+    final index = _cart.indexWhere((item) => item.product.id == product.id);
+    
+    if (index >= 0) {
+      if (quantity <= 0) {
+        _cart.removeAt(index);
+      } else if (quantity <= product.stock) {
+        _cart[index].quantity = quantity;
+      }
+      notifyListeners();
+    }
+  }
+
+  void clearCart() {
+    _cart = [];
+    notifyListeners();
+  }
+
+  // Sales operations
+  Future<bool> completeSale() async {
+    if (_cart.isEmpty || _currentUser == null) return false;
+    
+    try {
+      final sale = Sale(
+        date: DateTime.now(),
+        userId: _currentUser!.id!,
+        total: cartTotal,
+      );
+      
+      final items = _cart.map((cartItem) => SaleItem(
+        saleId: 0,
+        productId: cartItem.product.id!,
+        productName: cartItem.product.name,
+        quantity: cartItem.quantity,
+        unitPrice: cartItem.product.price,
+        subtotal: cartItem.subtotal,
+      )).toList();
+      
+      await _db.createSale(sale, items);
+      
+      clearCart();
+      await loadProducts();
+      await loadSales();
+      
+      return true;
+    } catch (e) {
+      _errorMessage = 'Erreur lors de la vente: $e';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<void> loadSales() async {
+    _sales = await _db.getSales();
+    notifyListeners();
+  }
+
+  Future<List<SaleItem>> getSaleItems(int saleId) async {
+    return await _db.getSaleItems(saleId);
+  }
+
   @override
   void dispose() {
     super.dispose();
