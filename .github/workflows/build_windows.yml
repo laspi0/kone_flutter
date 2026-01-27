@@ -2,9 +2,11 @@ name: Build Flutter for Windows
 
 on:
   push:
+    branches: [ main ]
     tags:
-      - 'prod-*'    # prod-v1.0 → x64 avec VC++
-      - 'dev-*'     # dev-test → x64 sans VC++
+      - 'prod-*'
+      - 'dev-*'
+  workflow_dispatch:
 
 jobs:
   build:
