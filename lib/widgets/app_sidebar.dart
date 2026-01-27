@@ -46,7 +46,7 @@ class AppSidebar extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'Shop Manager',
+                      auth.shopInfo!.name,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
