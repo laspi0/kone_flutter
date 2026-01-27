@@ -3,9 +3,6 @@ name: Build Flutter for Windows
 on:
   push:
     branches: [ main ]
-    tags:
-      - 'prod-*'
-      - 'dev-*'
   workflow_dispatch:
 
 jobs:
@@ -37,17 +34,17 @@ jobs:
           echo "$innoPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Download VC++ (prod only)
-        if: startsWith(github.ref, 'refs/tags/prod-')
+        if: contains(github.event.head_commit.message, '[prod]')
         run: |
           Invoke-WebRequest -Uri "https://aka.ms/vs/17/release/vc_redist.x64.exe" -OutFile "installer/vc_redist.x64.exe"
 
       - name: Use prod config
-        if: startsWith(github.ref, 'refs/tags/prod-')
+        if: contains(github.event.head_commit.message, '[prod]')
         run: |
           Copy-Item "installer/windows_installer_prod.iss" "installer/windows_installer.iss" -Force
 
       - name: Use dev config
-        if: startsWith(github.ref, 'refs/tags/dev-')
+        if: "!contains(github.event.head_commit.message, '[prod]')"
         run: |
           Copy-Item "installer/windows_installer_dev.iss" "installer/windows_installer.iss" -Force
 
@@ -56,17 +53,15 @@ jobs:
           iscc.exe "installer/windows_installer.iss"
 
       - name: Upload Prod Installer
-        if: startsWith(github.ref, 'refs/tags/prod-')
+        if: contains(github.event.head_commit.message, '[prod]')
         uses: actions/upload-artifact@v4
         with:
           name: shop-manager-installer-prod-x64
           path: installer/Output/shop_manager_setup_x64.exe
 
       - name: Upload Dev Installer
-        if: startsWith(github.ref, 'refs/tags/dev-')
+        if: "!contains(github.event.head_commit.message, '[prod]')"
         uses: actions/upload-artifact@v4
         with:
           name: shop-manager-installer-dev-x64
           path: installer/Output/shop_manager_setup.exe
-
-#update
