@@ -6,6 +6,7 @@ import 'dart:io'; // New import
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart'; // New import
 import 'package:file_picker/file_picker.dart'; // New import
+import 'package:pdf/pdf.dart'; // New import for PdfPageFormat
 import '../auth_provider.dart';
 import '../models.dart';
 import '../widgets/app_sidebar.dart';
@@ -738,58 +739,75 @@ class _SalesScreenState extends State<SalesScreen> {
         final pdfBytes = await PdfService().generateInvoicePdf(sale, saleItems, customer);
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.check_circle, color: Colors.white),
-                const SizedBox(width: 12),
-                const Text('Vente enregistrée'),
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 12),
+                Text('Vente enregistrée'),
               ],
             ),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-            action: SnackBarAction(
-              label: 'Enregistrer sous...',
-              onPressed: () async {
-                final fileName = 'facture-${DateFormat('yyyyMMdd-HHmmss').format(sale.date)}-${sale.id}.pdf';
-                final savePath = await FilePicker.platform.saveFile(
-                  dialogTitle: 'Enregistrer la facture',
-                  fileName: fileName,
-                  type: FileType.custom,
-                  allowedExtensions: ['pdf'],
-                );
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+          ),
+        );
 
-                if (savePath != null) {
-                  final file = File(savePath);
-                  await file.writeAsBytes(pdfBytes);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Facture enregistrée à: $savePath'),
-                        backgroundColor: Colors.blue,
-                        behavior: SnackBarBehavior.floating,
-                        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
-                      ),
-                    );
+        // Show dialog for print/save option
+        await showDialog(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('Facture Générée'),
+            content: const Text('Voulez-vous imprimer ou enregistrer la facture ?'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext); // Close dialog
+                  Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdfBytes);
+                },
+                child: const Text('Imprimer Facture'),
+              ),
+              FilledButton(
+                onPressed: () async {
+                  Navigator.pop(dialogContext); // Close dialog
+
+                  final fileName = 'facture-${DateFormat('yyyyMMdd-HHmmss').format(sale.date)}-${sale.id}.pdf';
+                  final savePath = await FilePicker.platform.saveFile(
+                    dialogTitle: 'Enregistrer la facture',
+                    fileName: fileName,
+                    type: FileType.custom,
+                    allowedExtensions: ['pdf'],
+                  );
+
+                  if (savePath != null) {
+                    final file = File(savePath);
+                    await file.writeAsBytes(pdfBytes);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Facture enregistrée à: $savePath'),
+                          backgroundColor: Colors.blue,
+                          behavior: SnackBarBehavior.floating,
+                          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+                        ),
+                      );
+                    }
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Enregistrement de la facture annulé.'),
+                          backgroundColor: Colors.orange,
+                          behavior: SnackBarBehavior.floating,
+                          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+                        ),
+                      );
+                    }
                   }
-                } else {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Enregistrement de la facture annulé.'),
-                        backgroundColor: Colors.orange,
-                        behavior: SnackBarBehavior.floating,
-                        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
-                      ),
-                    );
-                  }
-                }
-              },
-              textColor: Colors.white,
-            ),
+                },
+                child: const Text('Enregistrer Facture'),
+              ),
+            ],
           ),
         );
       } else if (context.mounted) {
@@ -804,9 +822,7 @@ class _SalesScreenState extends State<SalesScreen> {
             ),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
           ),
         );
       }
