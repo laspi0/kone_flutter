@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:printing/printing.dart'; // New import
 import 'dart:io'; // New import
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' as intl;
 import 'package:path_provider/path_provider.dart'; // New import
 import 'package:file_picker/file_picker.dart'; // New import
 import 'package:pdf/pdf.dart'; // New import for PdfPageFormat
@@ -32,8 +32,7 @@ class _SalesScreenState extends State<SalesScreen> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: Row(
         children: [
-          if (isDesktop)
-            const AppSidebar(currentPage: '/sales'),
+          if (isDesktop) const AppSidebar(currentPage: '/sales'),
           Expanded(
             child: Column(
               children: [
@@ -98,8 +97,9 @@ class _SalesScreenState extends State<SalesScreen> {
               icon: const Icon(Icons.arrow_back),
               onPressed: () => context.go('/home'),
               style: IconButton.styleFrom(
-                backgroundColor:
-                    Theme.of(context).colorScheme.surfaceContainerHighest,
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest,
               ),
             ),
           if (!isDesktop) const SizedBox(width: 12),
@@ -125,7 +125,9 @@ class _SalesScreenState extends State<SalesScreen> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primaryContainer,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Row(
@@ -165,8 +167,9 @@ class _SalesScreenState extends State<SalesScreen> {
                 ),
                 onPressed: auth.toggleTheme,
                 style: IconButton.styleFrom(
-                  backgroundColor:
-                      Theme.of(context).colorScheme.surfaceContainerHighest,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest,
                 ),
               );
             },
@@ -189,30 +192,29 @@ class _SalesScreenState extends State<SalesScreen> {
                   // Search bar
                   Container(
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withOpacity(0.08),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.08),
                       ),
                     ),
                     child: TextField(
                       decoration: InputDecoration(
                         hintText: 'Rechercher un produit...',
                         hintStyle: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withOpacity(0.4),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.4),
                         ),
                         prefixIcon: Icon(
                           Icons.search,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withOpacity(0.5),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.5),
                         ),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
@@ -248,7 +250,9 @@ class _SalesScreenState extends State<SalesScreen> {
                         const SizedBox(width: 8),
                         ...auth.categories.map((cat) {
                           final count = auth.products
-                              .where((p) => p.categoryId == cat.id && p.stock > 0)
+                              .where(
+                                (p) => p.categoryId == cat.id && p.stock > 0,
+                              )
                               .length;
                           return Padding(
                             padding: const EdgeInsets.only(right: 8),
@@ -282,9 +286,11 @@ class _SalesScreenState extends State<SalesScreen> {
     bool isDesktop,
   ) {
     var filteredProducts = auth.products.where((p) {
-      final matchesSearch =
-          p.name.toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesCategory = _selectedCategoryFilter == null ||
+      final matchesSearch = p.name.toLowerCase().contains(
+        _searchQuery.toLowerCase(),
+      );
+      final matchesCategory =
+          _selectedCategoryFilter == null ||
           p.categoryId == _selectedCategoryFilter;
       final inStock = p.stock > 0;
       return matchesSearch && matchesCategory && inStock;
@@ -304,8 +310,7 @@ class _SalesScreenState extends State<SalesScreen> {
               child: Icon(
                 Icons.inventory_2_outlined,
                 size: 48,
-                color:
-                    Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
               ),
             ),
             const SizedBox(height: 16),
@@ -313,8 +318,7 @@ class _SalesScreenState extends State<SalesScreen> {
               'Aucun produit disponible',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
-                color:
-                    Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
               ),
             ),
             const SizedBox(height: 4),
@@ -323,8 +327,7 @@ class _SalesScreenState extends State<SalesScreen> {
                   ? 'Tous les produits sont en rupture'
                   : 'Essayez une autre recherche',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color:
-                    Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
               ),
             ),
           ],
@@ -360,10 +363,9 @@ class _SalesScreenState extends State<SalesScreen> {
             color: Theme.of(context).colorScheme.surfaceContainerHighest,
             border: Border(
               left: BorderSide(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withOpacity(0.05),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withOpacity(0.05),
               ),
             ),
           ),
@@ -396,22 +398,17 @@ class _SalesScreenState extends State<SalesScreen> {
                             children: [
                               Text(
                                 'Panier',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
+                                style: Theme.of(context).textTheme.titleLarge
                                     ?.copyWith(fontWeight: FontWeight.bold),
                               ),
                               Text(
                                 '${auth.cartItemCount} article${auth.cartItemCount > 1 ? 's' : ''}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
+                                style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
-                                      .withOpacity(0.5),
-                                ),
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.5),
+                                    ),
                               ),
                             ],
                           ),
@@ -425,10 +422,12 @@ class _SalesScreenState extends State<SalesScreen> {
                             ),
                             tooltip: 'Vider',
                             style: IconButton.styleFrom(
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.errorContainer,
-                              foregroundColor:
-                                  Theme.of(context).colorScheme.error,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.errorContainer,
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.error,
                             ),
                           ),
                       ],
@@ -444,10 +443,9 @@ class _SalesScreenState extends State<SalesScreen> {
                           color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withOpacity(0.3),
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withOpacity(0.3),
                           ),
                         ),
                         child: Row(
@@ -455,8 +453,9 @@ class _SalesScreenState extends State<SalesScreen> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color:
-                                    Theme.of(context).colorScheme.primaryContainer,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primaryContainer,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
@@ -474,10 +473,9 @@ class _SalesScreenState extends State<SalesScreen> {
                                     'Client',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface
-                                          .withOpacity(0.5),
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface.withOpacity(0.5),
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -494,10 +492,9 @@ class _SalesScreenState extends State<SalesScreen> {
                             ),
                             Icon(
                               Icons.arrow_drop_down,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.5),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.5),
                             ),
                           ],
                         ),
@@ -508,10 +505,9 @@ class _SalesScreenState extends State<SalesScreen> {
               ),
               Divider(
                 height: 1,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withOpacity(0.08),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withOpacity(0.08),
               ),
               // Cart Items
               Expanded(
@@ -523,37 +519,30 @@ class _SalesScreenState extends State<SalesScreen> {
                             Icon(
                               Icons.shopping_cart_outlined,
                               size: 64,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.2),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withOpacity(0.2),
                             ),
                             const SizedBox(height: 16),
                             Text(
                               'Panier vide',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
+                              style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withOpacity(0.4),
-                              ),
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.4),
+                                  ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               'Ajoutez des produits',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
+                              style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withOpacity(0.3),
-                              ),
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.3),
+                                  ),
                             ),
                           ],
                         ),
@@ -572,10 +561,9 @@ class _SalesScreenState extends State<SalesScreen> {
               if (auth.cart.isNotEmpty) ...[
                 Divider(
                   height: 1,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withOpacity(0.08),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.08),
                 ),
                 Container(
                   padding: const EdgeInsets.all(24),
@@ -586,25 +574,20 @@ class _SalesScreenState extends State<SalesScreen> {
                         children: [
                           Text(
                             'Total',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
+                            style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withOpacity(0.6),
-                            ),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withOpacity(0.6),
+                                ),
                           ),
                           Text(
                             '${auth.cartTotal.toStringAsFixed(0)} FCFA',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineMedium
+                            style: Theme.of(context).textTheme.headlineMedium
                                 ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
                           ),
                         ],
                       ),
@@ -623,8 +606,9 @@ class _SalesScreenState extends State<SalesScreen> {
                             ),
                           ),
                           style: FilledButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.primary,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -664,10 +648,9 @@ class _SalesScreenState extends State<SalesScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withOpacity(0.2),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -736,7 +719,11 @@ class _SalesScreenState extends State<SalesScreen> {
         final Customer? customer = result['customer'];
 
         // Generate PDF
-        final pdfBytes = await PdfService().generateInvoicePdf(sale, saleItems, customer);
+        final pdfBytes = await PdfService().generateInvoicePdf(
+          sale,
+          saleItems,
+          customer,
+        );
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -749,7 +736,9 @@ class _SalesScreenState extends State<SalesScreen> {
             ),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+            ),
           ),
         );
 
@@ -758,12 +747,16 @@ class _SalesScreenState extends State<SalesScreen> {
           context: context,
           builder: (dialogContext) => AlertDialog(
             title: const Text('Facture Générée'),
-            content: const Text('Voulez-vous imprimer ou enregistrer la facture ?'),
+            content: const Text(
+              'Voulez-vous imprimer ou enregistrer la facture ?',
+            ),
             actions: [
               TextButton(
                 onPressed: () {
                   Navigator.pop(dialogContext); // Close dialog
-                  Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdfBytes);
+                  Printing.layoutPdf(
+                    onLayout: (PdfPageFormat format) async => pdfBytes,
+                  );
                 },
                 child: const Text('Imprimer Facture'),
               ),
@@ -771,7 +764,8 @@ class _SalesScreenState extends State<SalesScreen> {
                 onPressed: () async {
                   Navigator.pop(dialogContext); // Close dialog
 
-                  final fileName = 'facture-${DateFormat('yyyyMMdd-HHmmss').format(sale.date)}-${sale.id}.pdf';
+                  final fileName =
+                      'facture-${intl.DateFormat('yyyyMMdd-HHmmss').format(sale.date)}-${sale.id}.pdf';
                   final savePath = await FilePicker.platform.saveFile(
                     dialogTitle: 'Enregistrer la facture',
                     fileName: fileName,
@@ -788,7 +782,9 @@ class _SalesScreenState extends State<SalesScreen> {
                           content: Text('Facture enregistrée à: $savePath'),
                           backgroundColor: Colors.blue,
                           behavior: SnackBarBehavior.floating,
-                          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          ),
                         ),
                       );
                     }
@@ -799,7 +795,9 @@ class _SalesScreenState extends State<SalesScreen> {
                           content: Text('Enregistrement de la facture annulé.'),
                           backgroundColor: Colors.orange,
                           behavior: SnackBarBehavior.floating,
-                          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(8)),
+                          ),
                         ),
                       );
                     }
@@ -822,7 +820,9 @@ class _SalesScreenState extends State<SalesScreen> {
             ),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+            ),
           ),
         );
       }
@@ -847,8 +847,7 @@ class _SalesScreenState extends State<SalesScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color:
-                    Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -870,9 +869,7 @@ class _SalesScreenState extends State<SalesScreen> {
                 ],
               ),
             ),
-            Expanded(
-              child: _CustomerSelectorContent(auth: auth),
-            ),
+            Expanded(child: _CustomerSelectorContent(auth: auth)),
           ],
         ),
       ),
@@ -895,8 +892,7 @@ class _SalesScreenState extends State<SalesScreen> {
               auth.clearCart();
               Navigator.pop(context);
             },
-            child:
-                const Text('Vider', style: TextStyle(color: Colors.red)),
+            child: const Text('Vider', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -959,10 +955,9 @@ class _CustomerSelectorContentState extends State<_CustomerSelectorContent> {
                 hintText: 'Rechercher par nom ou téléphone...',
                 prefixIcon: Icon(
                   Icons.search,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withOpacity(0.4),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.4),
                 ),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
@@ -995,19 +990,17 @@ class _CustomerSelectorContentState extends State<_CustomerSelectorContent> {
                     Icon(
                       Icons.search_off,
                       size: 48,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.3),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.3),
                     ),
                     const SizedBox(height: 12),
                     Text(
                       'Aucun client trouvé',
                       style: TextStyle(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withOpacity(0.5),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.5),
                       ),
                     ),
                   ],
@@ -1170,9 +1163,7 @@ class _ProductListItem extends StatelessWidget {
                     children: [
                       Text(
                         product.name,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
+                        style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.bold),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1186,9 +1177,9 @@ class _ProductListItem extends StatelessWidget {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .secondaryContainer,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.secondaryContainer,
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
@@ -1196,9 +1187,9 @@ class _ProductListItem extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSecondaryContainer,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSecondaryContainer,
                               ),
                             ),
                           ),
@@ -1250,8 +1241,7 @@ class _ProductListItem extends StatelessWidget {
                   children: [
                     Text(
                       '${product.price.toStringAsFixed(0)}',
-                      style:
-                          Theme.of(context).textTheme.titleLarge?.copyWith(
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.primary,
                       ),
@@ -1259,10 +1249,9 @@ class _ProductListItem extends StatelessWidget {
                     Text(
                       'FCFA',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withOpacity(0.7),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.7),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -1336,10 +1325,9 @@ class _CustomerTile extends StatelessWidget {
                   customer.isWalkin ? Icons.store : Icons.person_outline,
                   color: selected
                       ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withOpacity(0.5),
+                      : Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.5),
                   size: 22,
                 ),
               ),
@@ -1363,10 +1351,9 @@ class _CustomerTile extends StatelessWidget {
                         customer.phone!,
                         style: TextStyle(
                           fontSize: 12,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withOpacity(0.5),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.5),
                         ),
                       ),
                     ],
@@ -1402,8 +1389,7 @@ class _CartItem extends StatelessWidget {
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color:
-                  Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
             ),
           ),
           child: Column(
@@ -1430,9 +1416,7 @@ class _CartItem extends StatelessWidget {
                       children: [
                         Text(
                           item.product.name,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleSmall
+                          style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(fontWeight: FontWeight.bold),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -1440,15 +1424,12 @@ class _CartItem extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           '${item.product.price.toStringAsFixed(0)} F',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
+                          style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurface
-                                .withOpacity(0.5),
-                          ),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.5),
+                              ),
                         ),
                       ],
                     ),
@@ -1458,10 +1439,9 @@ class _CartItem extends StatelessWidget {
                     icon: const Icon(Icons.close, size: 18),
                     color: Theme.of(context).colorScheme.error,
                     style: IconButton.styleFrom(
-                      backgroundColor: Theme.of(context)
-                          .colorScheme
-                          .errorContainer
-                          .withOpacity(0.5),
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.errorContainer.withOpacity(0.5),
                       padding: const EdgeInsets.all(6),
                     ),
                   ),
@@ -1473,8 +1453,9 @@ class _CartItem extends StatelessWidget {
                 children: [
                   Container(
                     decoration: BoxDecoration(
-                      color:
-                          Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -1493,9 +1474,7 @@ class _CartItem extends StatelessWidget {
                           alignment: Alignment.center,
                           child: Text(
                             '${item.quantity}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall
+                            style: Theme.of(context).textTheme.titleSmall
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -1513,8 +1492,7 @@ class _CartItem extends StatelessWidget {
                   ),
                   Text(
                     '${item.subtotal.toStringAsFixed(0)} F',
-                    style:
-                        Theme.of(context).textTheme.titleMedium?.copyWith(
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: Theme.of(context).colorScheme.primary,
                     ),
