@@ -109,13 +109,17 @@ class Product {
 
 // NOUVEAUX MODÈLES POUR VENTES
 
+// AJOUT À FAIRE DANS models.dart
+
 class Sale {
   final int? id;
   final DateTime date;
   final int userId;
-  final int? customerId; // Nouveau champ pour le client
+  final int? customerId;
   final double total;
   final String status;
+  final double? amountPaid; // NOUVEAU: Montant reçu du client
+  final double? change; // NOUVEAU: Monnaie rendue (calculé automatiquement)
 
   Sale({
     this.id,
@@ -124,6 +128,8 @@ class Sale {
     this.customerId,
     required this.total,
     this.status = 'completed',
+    this.amountPaid,
+    this.change,
   });
 
   Map<String, dynamic> toMap() {
@@ -134,6 +140,8 @@ class Sale {
       'customer_id': customerId,
       'total': total,
       'status': status,
+      'amount_paid': amountPaid,
+      'change': change,
     };
   }
 
@@ -145,6 +153,12 @@ class Sale {
       customerId: map['customer_id'],
       total: (map['total'] as num).toDouble(),
       status: map['status'],
+      amountPaid: map['amount_paid'] != null 
+          ? (map['amount_paid'] as num).toDouble() 
+          : null,
+      change: map['change'] != null 
+          ? (map['change'] as num).toDouble() 
+          : null,
     );
   }
 
@@ -155,6 +169,8 @@ class Sale {
     int? customerId,
     double? total,
     String? status,
+    double? amountPaid,
+    double? change,
   }) {
     return Sale(
       id: id ?? this.id,
@@ -163,8 +179,14 @@ class Sale {
       customerId: customerId ?? this.customerId,
       total: total ?? this.total,
       status: status ?? this.status,
+      amountPaid: amountPaid ?? this.amountPaid,
+      change: change ?? this.change,
     );
   }
+
+  // Calculer automatiquement la monnaie rendue
+  double get calculatedChange => 
+      amountPaid != null ? amountPaid! - total : 0.0;
 }
 
 class SaleItem {
@@ -264,6 +286,7 @@ class ShopInfo {
   final String phone;
   final String email;
   final String? logo;
+  final int lowStockThreshold;
 
   ShopInfo({
     required this.id,
@@ -272,6 +295,7 @@ class ShopInfo {
     required this.phone,
     required this.email,
     this.logo,
+    this.lowStockThreshold = 10,
   });
 
   factory ShopInfo.defaultShop() => ShopInfo(
@@ -280,6 +304,7 @@ class ShopInfo {
         address: 'Votre adresse ici',
         phone: 'XX-XXX-XX-XX',
         email: 'contact@email.com',
+        lowStockThreshold: 10,
       );
 
   Map<String, dynamic> toMap() {
@@ -290,6 +315,7 @@ class ShopInfo {
       'phone': phone,
       'email': email,
       'logo': logo,
+      'low_stock_threshold': lowStockThreshold,
     };
   }
 
@@ -301,6 +327,7 @@ class ShopInfo {
       phone: map['phone'],
       email: map['email'],
       logo: map['logo'],
+      lowStockThreshold: map['low_stock_threshold'] ?? 10,
     );
   }
 
@@ -310,6 +337,7 @@ class ShopInfo {
     String? phone,
     String? email,
     String? logo,
+    int? lowStockThreshold,
   }) {
     return ShopInfo(
       id: id,
@@ -318,6 +346,7 @@ class ShopInfo {
       phone: phone ?? this.phone,
       email: email ?? this.email,
       logo: logo ?? this.logo,
+      lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
     );
   }
 }

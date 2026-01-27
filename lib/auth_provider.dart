@@ -265,8 +265,9 @@ class AuthProvider extends ChangeNotifier {
           )
           .toList();
 
-      final createdSale = await _db.createSale(sale, items);
-      final fetchedSaleItems = await _db.getSaleItems(createdSale.id!); // Fetch actual SaleItems with correct saleId
+      final createdSaleId = await _db.createSale(sale, items);
+      final fetchedSaleItems = await _db.getSaleItems(createdSaleId); // Fetch actual SaleItems with correct saleId
+      final fullSale = await _db.getSaleById(createdSaleId); // Fetch the full Sale object
 
       _selectedCustomer = null; // Reset client
       clearCart();
@@ -276,7 +277,7 @@ class AuthProvider extends ChangeNotifier {
       Customer? actualCustomer = customer.id == 0 ? null : await _db.getCustomerById(customer.id!);
 
       return {
-        'sale': createdSale,
+        'sale': fullSale,
         'saleItems': fetchedSaleItems,
         'customer': actualCustomer,
       };

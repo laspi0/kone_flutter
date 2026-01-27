@@ -34,7 +34,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       children: [
                         _buildHeader(context),
                         const SizedBox(height: 32),
-                        _buildSettingsSections(context, isDesktop),
+                        Consumer<AuthProvider>(
+                          builder: (context, auth, _) {
+                            return _buildSettingsSections(context, isDesktop, auth);
+                          },
+                        ),
                       ],
                     ),
                   ),
@@ -111,7 +115,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSettingsSections(BuildContext context, bool isDesktop) {
+  Widget _buildSettingsSections(
+      BuildContext context, bool isDesktop, AuthProvider auth) {
     return Column(
       children: [
         // Section 1: Profil Utilisateur
@@ -256,10 +261,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _SettingsTile(
               icon: Icons.warning_amber_outlined,
               title: 'Seuil de stock faible',
-              subtitle: 'À implémenter - Étape 4',
+              subtitle: 'Actuel: ${auth.shopInfo!.lowStockThreshold}',
               trailing: const Icon(Icons.chevron_right, size: 20),
               onTap: () {
-                // TODO: Implémenter dans l'étape 4
+                _showEditLowStockThresholdDialog(context, auth);
               },
             ),
           ],
@@ -633,6 +638,72 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('$labelText mis à jour avec succès'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ========== DIALOGUES POUR ALERTES ==========
+
+  void _showEditLowStockThresholdDialog(
+      BuildContext context, AuthProvider auth) {
+    final currentThreshold = auth.shopInfo!.lowStockThreshold;
+    final controller =
+        TextEditingController(text: currentThreshold.toString());
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Modifier le seuil de stock faible'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Seuil de stock faible',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.warning_amber_outlined),
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Le seuil ne peut pas être vide';
+              }
+              final int? threshold = int.tryParse(value.trim());
+              if (threshold == null || threshold < 0) {
+                return 'Veuillez entrer un nombre valide (>= 0)';
+              }
+              return null;
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                final newThreshold = int.parse(controller.text.trim());
+                final updatedShopInfo =
+                    auth.shopInfo!.copyWith(lowStockThreshold: newThreshold);
+                await auth.updateShopInfo(updatedShopInfo);
+
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Seuil de stock faible mis à jour'),
                       backgroundColor: Colors.green,
                     ),
                   );

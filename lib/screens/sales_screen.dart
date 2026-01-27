@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:printing/printing.dart'; // New import
 import 'dart:io'; // New import
 import 'package:intl/intl.dart' as intl;
-import 'package:path_provider/path_provider.dart'; // New import
 import 'package:file_picker/file_picker.dart'; // New import
 import 'package:pdf/pdf.dart'; // New import for PdfPageFormat
 import '../auth_provider.dart';
@@ -724,6 +723,7 @@ class _SalesScreenState extends State<SalesScreen> {
           saleItems,
           customer,
           auth.shopInfo!,
+          auth.currentUser!.username,
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
