@@ -14,7 +14,7 @@ class PdfService {
 
     pdf.addPage(
       pw.MultiPage(
-        pageFormat: const PdfPageFormat(80 * PdfPageFormat.mm, double.infinity, marginAll: 2 * PdfPageFormat.mm),
+        pageFormat: const PdfPageFormat(80 * PdfPageFormat.mm, 3000 * PdfPageFormat.mm, marginAll: 2 * PdfPageFormat.mm),
         build: (pw.Context context) {
           return [
             pw.Column(
