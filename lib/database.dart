@@ -8,7 +8,7 @@ class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
   static const int databaseVersion =
-      5; // Mise à jour de la version de la base de données
+      6; // Mise à jour de la version de la base de données
 
   DatabaseHelper._init();
 
@@ -112,6 +112,19 @@ class DatabaseHelper {
 
       await _insertDefaultCustomers(db);
     }
+    if (oldVersion < 6) {
+      await db.execute('''
+          CREATE TABLE shop_info (
+            id INTEGER PRIMARY KEY,
+            name TEXT NOT NULL,
+            address TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            email TEXT NOT NULL,
+            logo TEXT
+          )
+        ''');
+      await _insertDefaultShopInfo(db);
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -180,11 +193,25 @@ class DatabaseHelper {
         FOREIGN KEY (product_id) REFERENCES products (id)
       )
     ''');
+     await db.execute('''
+      CREATE TABLE shop_info (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        address TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        email TEXT NOT NULL,
+        logo TEXT
+      )
+    ''');
 
     await _insertDefaultData(db);
     await _insertDefaultCustomers(db);
+     await _insertDefaultShopInfo(db);
   }
 
+  Future _insertDefaultShopInfo(Database db) async {
+    await db.insert('shop_info', ShopInfo.defaultShop().toMap());
+  }
   Future _insertDefaultData(Database db) async {
     await db.insert('users', {
       'username': 'admin',
@@ -504,6 +531,26 @@ class DatabaseHelper {
     );
     if (maps.isEmpty) return null;
     return Customer.fromMap(maps.first);
+  }
+
+  // Shop Info
+  Future<ShopInfo> getShopInfo() async {
+    final db = await database;
+    final maps = await db.query('shop_info', where: 'id = ?', whereArgs: [1]);
+    if (maps.isNotEmpty) {
+      return ShopInfo.fromMap(maps.first);
+    }
+    return ShopInfo.defaultShop();
+  }
+
+  Future<int> updateShopInfo(ShopInfo shopInfo) async {
+    final db = await database;
+    return await db.update(
+      'shop_info',
+      shopInfo.toMap(),
+      where: 'id = ?',
+      whereArgs: [shopInfo.id],
+    );
   }
 
   Future close() async {

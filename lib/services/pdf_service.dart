@@ -6,7 +6,7 @@ import '../models.dart'; // Assuming models.dart contains Sale, SaleItem, Produc
 
 class PdfService {
   Future<Uint8List> generateInvoicePdf(
-      Sale sale, List<SaleItem> saleItems, Customer? customer) async {
+      Sale sale, List<SaleItem> saleItems, Customer? customer, ShopInfo shopInfo) async {
     final pdf = pw.Document();
 
     final formatCurrency = NumberFormat.currency(
@@ -29,11 +29,10 @@ class PdfService {
                 pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.center,
                   children: [
-                    pw.Text('Shop Manager', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
-                    pw.Text('Adresse du magasin', style: const pw.TextStyle(fontSize: 8)),
-                    pw.Text('Ville, Pays', style: const pw.TextStyle(fontSize: 8)),
-                    pw.Text('Tel: +123 456 7890', style: const pw.TextStyle(fontSize: 8)),
-                    pw.Text('Email: contact@shopmanager.com', style: const pw.TextStyle(fontSize: 8)),
+                    pw.Text(shopInfo.name, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                    pw.Text(shopInfo.address, style: const pw.TextStyle(fontSize: 8)),
+                    pw.Text('Tel: ${shopInfo.phone}', style: const pw.TextStyle(fontSize: 8)),
+                    pw.Text('Email: ${shopInfo.email}', style: const pw.TextStyle(fontSize: 8)),
                   ],
                 ),
                 pw.SizedBox(height: 10),

@@ -256,3 +256,68 @@ class Customer {
 
   bool get isWalkin => id == 0;
 }
+
+class ShopInfo {
+  final int id;
+  final String name;
+  final String address;
+  final String phone;
+  final String email;
+  final String? logo;
+
+  ShopInfo({
+    required this.id,
+    required this.name,
+    required this.address,
+    required this.phone,
+    required this.email,
+    this.logo,
+  });
+
+  factory ShopInfo.defaultShop() => ShopInfo(
+        id: 1,
+        name: 'Mon Magasin',
+        address: 'Votre adresse ici',
+        phone: 'XX-XXX-XX-XX',
+        email: 'contact@email.com',
+      );
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'name': name,
+      'address': address,
+      'phone': phone,
+      'email': email,
+      'logo': logo,
+    };
+  }
+
+  factory ShopInfo.fromMap(Map<String, dynamic> map) {
+    return ShopInfo(
+      id: map['id'],
+      name: map['name'],
+      address: map['address'],
+      phone: map['phone'],
+      email: map['email'],
+      logo: map['logo'],
+    );
+  }
+
+  ShopInfo copyWith({
+    String? name,
+    String? address,
+    String? phone,
+    String? email,
+    String? logo,
+  }) {
+    return ShopInfo(
+      id: id,
+      name: name ?? this.name,
+      address: address ?? this.address,
+      phone: phone ?? this.phone,
+      email: email ?? this.email,
+      logo: logo ?? this.logo,
+    );
+  }
+}

@@ -150,37 +150,85 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _SettingsTile(
                       icon: Icons.business_outlined,
                       title: 'Nom de la boutique',
-                      subtitle: 'À implémenter - Étape 2',
+                      subtitle: auth.shopInfo!.name,
                       trailing: const Icon(Icons.chevron_right, size: 20),
                       onTap: () {
-                        // TODO: Implémenter dans l'étape 2
+                        _showEditShopInfoDialog(
+                          context,
+                          auth,
+                          'Modifier le nom de la boutique',
+                          auth.shopInfo!.name,
+                          'Nom de la boutique',
+                          Icons.business_outlined,
+                          (newValue) {
+                            final updatedShopInfo =
+                                auth.shopInfo!.copyWith(name: newValue);
+                            auth.updateShopInfo(updatedShopInfo);
+                          },
+                        );
                       },
                     ),
                     _SettingsTile(
                       icon: Icons.location_on_outlined,
                       title: 'Adresse',
-                      subtitle: 'À implémenter - Étape 2',
+                      subtitle: auth.shopInfo!.address,
                       trailing: const Icon(Icons.chevron_right, size: 20),
                       onTap: () {
-                        // TODO: Implémenter dans l'étape 2
+                        _showEditShopInfoDialog(
+                          context,
+                          auth,
+                          'Modifier l\'adresse',
+                          auth.shopInfo!.address,
+                          'Adresse',
+                          Icons.location_on_outlined,
+                          (newValue) {
+                            final updatedShopInfo =
+                                auth.shopInfo!.copyWith(address: newValue);
+                            auth.updateShopInfo(updatedShopInfo);
+                          },
+                        );
                       },
                     ),
                     _SettingsTile(
                       icon: Icons.phone_outlined,
                       title: 'Téléphone',
-                      subtitle: 'À implémenter - Étape 2',
+                      subtitle: auth.shopInfo!.phone,
                       trailing: const Icon(Icons.chevron_right, size: 20),
                       onTap: () {
-                        // TODO: Implémenter dans l'étape 2
+                        _showEditShopInfoDialog(
+                          context,
+                          auth,
+                          'Modifier le numéro de téléphone',
+                          auth.shopInfo!.phone,
+                          'Téléphone',
+                          Icons.phone_outlined,
+                          (newValue) {
+                            final updatedShopInfo =
+                                auth.shopInfo!.copyWith(phone: newValue);
+                            auth.updateShopInfo(updatedShopInfo);
+                          },
+                        );
                       },
                     ),
                     _SettingsTile(
                       icon: Icons.email_outlined,
                       title: 'Email',
-                      subtitle: 'À implémenter - Étape 2',
+                      subtitle: auth.shopInfo!.email,
                       trailing: const Icon(Icons.chevron_right, size: 20),
                       onTap: () {
-                        // TODO: Implémenter dans l'étape 2
+                        _showEditShopInfoDialog(
+                          context,
+                          auth,
+                          'Modifier l\'email',
+                          auth.shopInfo!.email,
+                          'Email',
+                          Icons.email_outlined,
+                          (newValue) {
+                            final updatedShopInfo =
+                                auth.shopInfo!.copyWith(email: newValue);
+                            auth.updateShopInfo(updatedShopInfo);
+                          },
+                        );
                       },
                     ),
                     _SettingsTile(
@@ -531,6 +579,67 @@ class _SettingsScreenState extends State<SettingsScreen> {
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
             child: const Text('Déconnexion'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ========== DIALOGUES POUR INFORMATIONS BOUTIQUE ==========
+
+  void _showEditShopInfoDialog(
+      BuildContext context,
+      AuthProvider auth,
+      String title,
+      String currentValue,
+      String labelText,
+      IconData icon,
+      Function(String) onSave) {
+    final controller = TextEditingController(text: currentValue);
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              labelText: labelText,
+              border: const OutlineInputBorder(),
+              prefixIcon: Icon(icon),
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Ce champ ne peut pas être vide';
+              }
+              return null;
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                await onSave(controller.text.trim());
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('$labelText mis à jour avec succès'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Enregistrer'),
           ),
         ],
       ),

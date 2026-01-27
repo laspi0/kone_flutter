@@ -15,6 +15,7 @@ class AuthProvider extends ChangeNotifier {
   List<Customer> _customers = [];
   List<User> _users = [];
   Customer? _selectedCustomer;
+  ShopInfo? _shopInfo;
 
   final DatabaseHelper _db = DatabaseHelper.instance;
 
@@ -29,6 +30,7 @@ class AuthProvider extends ChangeNotifier {
   List<CartItem> get cart => _cart;
   List<Customer> get customers => _customers;
   List<User> get users => _users;
+  ShopInfo? get shopInfo => _shopInfo;
   Customer? get selectedCustomer => _selectedCustomer;
 
   bool get isLoggedIn => _currentUser != null;
@@ -73,6 +75,7 @@ class AuthProvider extends ChangeNotifier {
     await loadProducts();
     await loadSales();
     await loadCustomers();
+    await loadShopInfo();
   }
 
   void logout() {
@@ -85,10 +88,23 @@ class AuthProvider extends ChangeNotifier {
     _customers = [];
     _users = [];
     _selectedCustomer = null;
+    _shopInfo = null;
     notifyListeners();
   }
-   Future<void> loadUsers() async {
+
+  Future<void> loadUsers() async {
     _users = await _db.getAllUsers();
+    notifyListeners();
+  }
+
+  Future<void> loadShopInfo() async {
+    _shopInfo = await _db.getShopInfo();
+    notifyListeners();
+  }
+
+  Future<void> updateShopInfo(ShopInfo shopInfo) async {
+    await _db.updateShopInfo(shopInfo);
+    _shopInfo = shopInfo;
     notifyListeners();
   }
 

@@ -723,6 +723,7 @@ class _SalesScreenState extends State<SalesScreen> {
           sale,
           saleItems,
           customer,
+          auth.shopInfo!,
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
