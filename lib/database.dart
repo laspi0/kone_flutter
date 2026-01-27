@@ -1,5 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 import 'models.dart';
 
 class DatabaseHelper {
@@ -15,12 +17,18 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
+    final documentsDir = await getApplicationDocumentsDirectory();
+    final path = join(documentsDir.path, filePath);
+    
+    // Vérifier que le répertoire existe
+    final directory = Directory(documentsDir.path);
+    if (!await directory.exists()) {
+      await directory.create(recursive: true);
+    }
 
     return await openDatabase(
       path,
-      version: 2, // Version incrémentée pour forcer la migration
+      version: 2,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
