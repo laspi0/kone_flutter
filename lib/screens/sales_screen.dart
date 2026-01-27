@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:printing/printing.dart'; // New import
+import 'dart:io'; // New import
+import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart'; // New import
+import 'package:file_picker/file_picker.dart'; // New import
 import '../auth_provider.dart';
 import '../models.dart';
 import '../widgets/app_sidebar.dart';
@@ -748,9 +752,41 @@ class _SalesScreenState extends State<SalesScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             action: SnackBarAction(
-              label: 'Voir Facture',
-              onPressed: () {
-                Printing.sharePdf(bytes: pdfBytes, filename: 'facture_${sale.id}.pdf');
+              label: 'Enregistrer sous...',
+              onPressed: () async {
+                final fileName = 'facture-${DateFormat('yyyyMMdd-HHmmss').format(sale.date)}-${sale.id}.pdf';
+                final savePath = await FilePicker.platform.saveFile(
+                  dialogTitle: 'Enregistrer la facture',
+                  fileName: fileName,
+                  type: FileType.custom,
+                  allowedExtensions: ['pdf'],
+                );
+
+                if (savePath != null) {
+                  final file = File(savePath);
+                  await file.writeAsBytes(pdfBytes);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Facture enregistrée à: $savePath'),
+                        backgroundColor: Colors.blue,
+                        behavior: SnackBarBehavior.floating,
+                        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+                      ),
+                    );
+                  }
+                } else {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Enregistrement de la facture annulé.'),
+                        backgroundColor: Colors.orange,
+                        behavior: SnackBarBehavior.floating,
+                        shape: const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+                      ),
+                    );
+                  }
+                }
               },
               textColor: Colors.white,
             ),
