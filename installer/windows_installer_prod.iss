@@ -1,7 +1,8 @@
 [Setup]
-AppName=Shop Manager
+AppName=Sidary
 AppVersion=1.0.0
-AppPublisher=Shop Manager Team
+AppPublisher=laspi0
+SetupIconFile=..\windows\runner\resources\app_icon.ico
 AppPublisherURL=https://shopmanager.com
 DefaultDirName={autopf}\ShopManager
 DefaultGroupName=Shop Manager
