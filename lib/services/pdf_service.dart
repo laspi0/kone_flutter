@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:io';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:intl/intl.dart';
@@ -19,6 +20,22 @@ class PdfService {
       symbol: 'F',
       decimalDigits: 0,
     );
+
+    // Charger le logo de manière asynchrone
+    pw.Widget? logoWidget;
+    if (shopInfo.logo != null && shopInfo.logo!.isNotEmpty) {
+      try {
+        final logoFile = File(shopInfo.logo!);
+        if (await logoFile.exists()) {
+          final imageBytes = await logoFile.readAsBytes();
+          final logoImage = pw.MemoryImage(imageBytes);
+          logoWidget = pw.Image(logoImage, height: 40); // Hauteur du logo
+        }
+      } catch (e) {
+        print("Could not load logo for PDF: $e");
+      }
+    }
+
 
     pdf.addPage(
       pw.MultiPage(
@@ -42,6 +59,11 @@ class PdfService {
                 pw.Center(
                   child: pw.Column(
                     children: [
+                      // Afficher le logo s'il existe
+                      if (logoWidget != null) ...[
+                        logoWidget,
+                        pw.SizedBox(height: 5),
+                      ],
                       pw.Text(
                         shopInfo.name,
                         style: pw.TextStyle(
