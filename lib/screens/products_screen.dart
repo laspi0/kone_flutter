@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:io';
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import '../auth_provider.dart';
 import '../models.dart';
 import '../widgets/app_sidebar.dart'; // New import
@@ -416,6 +418,7 @@ class _ProductDialogState extends State<_ProductDialog> {
   late TextEditingController _descriptionController;
   late TextEditingController _priceController;
   late TextEditingController _stockController;
+  late TextEditingController _barcodeController; // New controller
   int? _selectedCategoryId;
 
   @override
@@ -425,6 +428,7 @@ class _ProductDialogState extends State<_ProductDialog> {
     _descriptionController = TextEditingController(text: widget.product?.description ?? '');
     _priceController = TextEditingController(text: widget.product?.price.toString() ?? '');
     _stockController = TextEditingController(text: widget.product?.stock.toString() ?? '');
+    _barcodeController = TextEditingController(text: widget.product?.barcode ?? ''); // Initialize barcode controller
     _selectedCategoryId = widget.product?.categoryId;
   }
 
@@ -434,7 +438,20 @@ class _ProductDialogState extends State<_ProductDialog> {
     _descriptionController.dispose();
     _priceController.dispose();
     _stockController.dispose();
+    _barcodeController.dispose(); // Dispose barcode controller
     super.dispose();
+  }
+
+  Future<void> _scanBarcodeAndPopulate() async {
+    String barcodeScanRes = await FlutterBarcodeScanner.scanBarcode(
+        '#ff6666', 'Annuler', true, ScanMode.BARCODE);
+    if (!mounted) return;
+
+    if (barcodeScanRes != '-1') { // '-1' means user canceled
+      setState(() {
+        _barcodeController.text = barcodeScanRes;
+      });
+    }
   }
 
   @override
@@ -467,6 +484,20 @@ class _ProductDialogState extends State<_ProductDialog> {
                     items: auth.categories.map((cat) => DropdownMenuItem(value: cat.id, child: Text(cat.name))).toList(),
                     onChanged: (value) => setState(() => _selectedCategoryId = value),
                     validator: (v) => v == null ? 'Requis' : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _barcodeController, // Barcode controller
+                    decoration: InputDecoration(
+                      labelText: 'Code-barres',
+                      border: const OutlineInputBorder(),
+                      suffixIcon: (Platform.isAndroid || Platform.isIOS)
+                        ? IconButton(
+                            icon: const Icon(Icons.qr_code_scanner),
+                            onPressed: _scanBarcodeAndPopulate,
+                          )
+                        : null,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -507,6 +538,7 @@ class _ProductDialogState extends State<_ProductDialog> {
       price: double.parse(_priceController.text),
       stock: int.parse(_stockController.text),
       categoryId: _selectedCategoryId!,
+      barcode: _barcodeController.text.isEmpty ? null : _barcodeController.text, // Add barcode
     );
 
     final auth = context.read<AuthProvider>();
