@@ -34,26 +34,18 @@ class _SalesScreenState extends State<SalesScreen> {
     final isDesktop =
         Platform.isWindows || Platform.isLinux || Platform.isMacOS;
     if (isDesktop) {
+      // Set initial focus on the barcode field on desktop
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _barcodeFocusNode.requestFocus();
       });
-      _barcodeFocusNode.addListener(_handleFocusChange);
     }
   }
 
   @override
   void dispose() {
     _barcodeController.dispose();
-    _barcodeFocusNode.removeListener(_handleFocusChange);
     _barcodeFocusNode.dispose();
     super.dispose();
-  }
-
-  void _handleFocusChange() {
-    if (!mounted) return;
-    if (!_barcodeFocusNode.hasFocus) {
-      _barcodeFocusNode.requestFocus();
-    }
   }
 
   Future<void> _scanBarcodeMobile() async {
@@ -127,6 +119,7 @@ class _SalesScreenState extends State<SalesScreen> {
     // Clear and re-focus for the next scan on desktop
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
       _barcodeController.clear();
+      _barcodeFocusNode.requestFocus();
     }
   }
 
