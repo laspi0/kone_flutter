@@ -47,11 +47,16 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildTopBar(BuildContext context, bool isDesktop) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: isDesktop ? 40 : 20, vertical: 16),
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 40 : 20,
+        vertical: 16,
+      ),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border(
-          bottom: BorderSide(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05)),
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+          ),
         ),
       ),
       child: Row(
@@ -67,7 +72,11 @@ class HomeScreen extends StatelessWidget {
           Consumer<AuthProvider>(
             builder: (context, auth, _) {
               return IconButton(
-                icon: Icon(auth.themeMode == ThemeMode.dark ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
+                icon: Icon(
+                  auth.themeMode == ThemeMode.dark
+                      ? Icons.light_mode_outlined
+                      : Icons.dark_mode_outlined,
+                ),
                 onPressed: auth.toggleTheme,
                 tooltip: 'Changer le thème',
               );
@@ -98,7 +107,7 @@ class HomeScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: user.isAdmin 
+                color: user.isAdmin
                     ? Theme.of(context).colorScheme.primaryContainer
                     : Theme.of(context).colorScheme.secondaryContainer,
                 borderRadius: BorderRadius.circular(8),
@@ -107,9 +116,11 @@ class HomeScreen extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    user.isAdmin ? Icons.admin_panel_settings_outlined : Icons.person_outline,
+                    user.isAdmin
+                        ? Icons.admin_panel_settings_outlined
+                        : Icons.person_outline,
                     size: 16,
-                    color: user.isAdmin 
+                    color: user.isAdmin
                         ? Theme.of(context).colorScheme.primary
                         : Theme.of(context).colorScheme.onSecondaryContainer,
                   ),
@@ -119,7 +130,7 @@ class HomeScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: user.isAdmin 
+                      color: user.isAdmin
                           ? Theme.of(context).colorScheme.primary
                           : Theme.of(context).colorScheme.onSecondaryContainer,
                     ),
@@ -137,28 +148,33 @@ class HomeScreen extends StatelessWidget {
     return Consumer<AuthProvider>(
       builder: (context, auth, _) {
         final totalSales = auth.sales.length;
-        final totalRevenue = auth.sales.fold(0.0, (sum, sale) => sum + sale.total);
+        final totalRevenue = auth.sales.fold(
+          0.0,
+          (sum, sale) => sum + sale.total,
+        );
         final todaySales = auth.sales.where((s) {
           final today = DateTime.now();
-          return s.date.day == today.day && 
-                 s.date.month == today.month && 
-                 s.date.year == today.year;
+          return s.date.day == today.day &&
+              s.date.month == today.month &&
+              s.date.year == today.year;
         }).length;
-        final todayRevenue = auth.sales.where((s) {
-          final today = DateTime.now();
-          return s.date.day == today.day && 
-                 s.date.month == today.month && 
-                 s.date.year == today.year;
-        }).fold(0.0, (sum, sale) => sum + sale.total);
+        final todayRevenue = auth.sales
+            .where((s) {
+              final today = DateTime.now();
+              return s.date.day == today.day &&
+                  s.date.month == today.month &&
+                  s.date.year == today.year;
+            })
+            .fold(0.0, (sum, sale) => sum + sale.total);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Vue d\'ensemble',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 16),
             GridView.count(
@@ -181,14 +197,17 @@ class HomeScreen extends StatelessWidget {
                   label: 'CA aujourd\'hui',
                   value: '${todayRevenue.toStringAsFixed(0)} F',
                   color: Colors.green,
-                  subtitle: todaySales > 0 ? 'Moy: ${(todayRevenue / todaySales).toStringAsFixed(0)} F' : null,
+                  subtitle: todaySales > 0
+                      ? 'Moy: ${(todayRevenue / todaySales).toStringAsFixed(0)} F'
+                      : null,
                 ),
                 _StatCard(
                   icon: Icons.inventory_2_outlined,
                   label: 'Produits',
                   value: '${auth.products.length}',
                   color: Colors.purple,
-                  subtitle: '${auth.products.where((p) => p.stock < 10).length} stock bas',
+                  subtitle:
+                      '${auth.products.where((p) => p.stock < 10).length} stock bas',
                   onTap: () => context.go('/products'),
                 ),
                 _StatCard(
@@ -216,7 +235,9 @@ class HomeScreen extends StatelessWidget {
               color: Theme.of(context).colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withOpacity(0.05),
               ),
             ),
             child: Center(
@@ -225,13 +246,17 @@ class HomeScreen extends StatelessWidget {
                   Icon(
                     Icons.receipt_long_outlined,
                     size: 48,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.3),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Aucune vente enregistrée',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.5),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -256,9 +281,9 @@ class HomeScreen extends StatelessWidget {
               children: [
                 Text(
                   'Dernières ventes',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 TextButton(
                   onPressed: () => context.go('/sale-history'),
@@ -272,7 +297,9 @@ class HomeScreen extends StatelessWidget {
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.05),
                 ),
               ),
               child: ListView.separated(
@@ -281,7 +308,9 @@ class HomeScreen extends StatelessWidget {
                 itemCount: recentSales.length,
                 separatorBuilder: (_, __) => Divider(
                   height: 1,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.05),
                 ),
                 itemBuilder: (context, index) {
                   final sale = recentSales[index];
@@ -352,7 +381,9 @@ class _StatCard extends StatelessWidget {
                 Text(
                   label,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
                 if (subtitle != null) ...[
@@ -381,8 +412,9 @@ class _SaleListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final time = '${sale.date.hour.toString().padLeft(2, '0')}:${sale.date.minute.toString().padLeft(2, '0')}';
-    
+    final time =
+        '${sale.date.hour.toString().padLeft(2, '0')}:${sale.date.minute.toString().padLeft(2, '0')}';
+
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       leading: Container(
@@ -439,10 +471,6 @@ class _SaleListItem extends StatelessWidget {
   }
 }
 
-
-
-
-
 class _MobileDrawer extends StatelessWidget {
   const _MobileDrawer();
 
@@ -458,30 +486,78 @@ class _MobileDrawer extends StatelessWidget {
             padding: EdgeInsets.zero,
             children: [
               DrawerHeader(
-                decoration: BoxDecoration(color: Theme.of(context).colorScheme.primaryContainer),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     const Icon(Icons.store, size: 48),
                     const SizedBox(height: 12),
-                    Text('Shop Manager', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
-                    Text(user.username, style: Theme.of(context).textTheme.bodySmall),
+                    Text(
+                      'Shop Manager',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      user.username,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
                   ],
                 ),
               ),
-              ListTile(leading: const Icon(Icons.home_outlined), title: const Text('Accueil'), onTap: () => Navigator.pop(context)),
-              ListTile(leading: const Icon(Icons.point_of_sale), title: const Text('Point de vente'), onTap: () { Navigator.pop(context); context.go('/sales'); }),
-              ListTile(leading: const Icon(Icons.receipt_long_outlined), title: const Text('Historique'), onTap: () { Navigator.pop(context); context.go('/sale-history'); }),
+              ListTile(
+                leading: const Icon(Icons.home_outlined),
+                title: const Text('Accueil'),
+                onTap: () => Navigator.pop(context),
+              ),
+              ListTile(
+                leading: const Icon(Icons.point_of_sale),
+                title: const Text('Point de vente'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.go('/sales');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.receipt_long_outlined),
+                title: const Text('Historique'),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.go('/sale-history');
+                },
+              ),
               if (user.isAdmin) ...[
                 const Divider(),
-                ListTile(leading: const Icon(Icons.inventory_2_outlined), title: const Text('Produits'), onTap: () { Navigator.pop(context); context.go('/products'); }),
-                ListTile(leading: const Icon(Icons.category_outlined), title: const Text('Catégories'), onTap: () { Navigator.pop(context); context.go('/categories'); }),
+                ListTile(
+                  leading: const Icon(Icons.inventory_2_outlined),
+                  title: const Text('Produits'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/products');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.category_outlined),
+                  title: const Text('Catégories'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.go('/categories');
+                  },
+                ),
               ],
               const Divider(),
               ListTile(
-                leading: Icon(Icons.logout, color: Theme.of(context).colorScheme.error),
-                title: Text('Déconnexion', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                leading: Icon(
+                  Icons.logout,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+                title: Text(
+                  'Déconnexion',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
                 onTap: () {
                   auth.logout();
                   Navigator.pop(context);

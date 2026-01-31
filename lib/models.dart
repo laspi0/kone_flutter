@@ -74,6 +74,7 @@ class Product {
   final double price;
   final int stock;
   final int categoryId;
+  final String? barcode; // Champ ajouté
 
   Product({
     this.id,
@@ -82,6 +83,7 @@ class Product {
     required this.price,
     required this.stock,
     required this.categoryId,
+    this.barcode, // Ajouté au constructeur
   });
 
   Map<String, dynamic> toMap() {
@@ -92,6 +94,7 @@ class Product {
       'price': price,
       'stock': stock,
       'category_id': categoryId,
+      'barcode': barcode, // Ajouté à la map
     };
   }
 
@@ -103,6 +106,7 @@ class Product {
       price: (map['price'] as num).toDouble(),
       stock: map['stock'],
       categoryId: map['category_id'],
+      barcode: map['barcode'], // Ajouté depuis la map
     );
   }
 }

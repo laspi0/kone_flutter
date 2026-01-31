@@ -7,7 +7,7 @@ import 'models.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
-  static const int databaseVersion = 6; // Mise à jour de la version de la base de données
+  static const int databaseVersion = 9; // Mise à jour de la version de la base de données
 
   DatabaseHelper._init();
 
@@ -28,7 +28,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: databaseVersion, // Version mise à jour pour inclure les clients
+      version: databaseVersion, // Version mise à jour
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
     );
@@ -113,6 +113,27 @@ class DatabaseHelper {
         ALTER TABLE sales ADD COLUMN change REAL DEFAULT NULL
       ''');
     }
+    if (oldVersion < 7) {
+      // Add barcode column to products table
+      await db.execute('ALTER TABLE products ADD COLUMN barcode TEXT');
+    }
+    if (oldVersion < 8) {
+      // Set barcodes for default products that might not have one
+      await db.rawUpdate(
+        "UPDATE products SET barcode = ? WHERE name = ? AND barcode IS NULL",
+        ['1111111111111', 'iPhone 15 Pro']);
+      await db.rawUpdate(
+        "UPDATE products SET barcode = ? WHERE name = ? AND barcode IS NULL",
+        ['2222222222222', 'MacBook Air M2']);
+    }
+     if (oldVersion < 9) {
+      try {
+        await db.execute('ALTER TABLE shop_info ADD COLUMN low_stock_threshold INTEGER NOT NULL DEFAULT 10');
+      } catch (e) {
+        // Column likely already exists, which is fine.
+        print('Could not add low_stock_threshold column: $e');
+      }
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -151,6 +172,7 @@ class DatabaseHelper {
         price REAL NOT NULL,
         stock INTEGER NOT NULL,
         category_id INTEGER NOT NULL,
+        barcode TEXT,
         FOREIGN KEY (category_id) REFERENCES categories (id)
       )
     ''');
@@ -280,6 +302,7 @@ class DatabaseHelper {
       'price': 650000.0,
       'stock': 15,
       'category_id': 1,
+      'barcode': '1111111111111',
     });
     await db.insert('products', {
       'name': 'MacBook Air M2',
@@ -287,6 +310,7 @@ class DatabaseHelper {
       'price': 850000.0,
       'stock': 8,
       'category_id': 1,
+      'barcode': '2222222222222',
     });
     await db.insert('products', {
       'name': 'AirPods Pro',
@@ -378,6 +402,21 @@ class DatabaseHelper {
     final db = await database;
     final maps = await db.query('products', orderBy: 'name');
     return maps.map((map) => Product.fromMap(map)).toList();
+  }
+
+  Future<Product?> getProductByBarcode(String barcode) async {
+    final db = await database;
+    final maps = await db.query(
+      'products',
+      where: 'barcode = ?',
+      whereArgs: [barcode],
+      limit: 1,
+    );
+
+    if (maps.isNotEmpty) {
+      return Product.fromMap(maps.first);
+    }
+    return null;
   }
 
   Future<List<Product>> getProductsByCategory(int categoryId) async {

@@ -1,15 +1,17 @@
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:shop_manager/database.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:printing/printing.dart'; // New import
-import 'dart:io'; // New import
+import 'package:printing/printing.dart';
+import 'dart:io';
 import 'package:intl/intl.dart' as intl;
-import 'package:file_picker/file_picker.dart'; // New import
-import 'package:pdf/pdf.dart'; // New import for PdfPageFormat
+import 'package:file_picker/file_picker.dart';
+import 'package:pdf/pdf.dart';
 import '../auth_provider.dart';
 import '../models.dart';
 import '../widgets/app_sidebar.dart';
-import '../services/pdf_service.dart'; // New import
+import '../services/pdf_service.dart';
 
 class SalesScreen extends StatefulWidget {
   const SalesScreen({super.key});
@@ -21,6 +23,112 @@ class SalesScreen extends StatefulWidget {
 class _SalesScreenState extends State<SalesScreen> {
   String _searchQuery = '';
   int? _selectedCategoryFilter;
+
+  // Controllers for barcode scanning
+  final _barcodeController = TextEditingController();
+  final _barcodeFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    final isDesktop =
+        Platform.isWindows || Platform.isLinux || Platform.isMacOS;
+    if (isDesktop) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _barcodeFocusNode.requestFocus();
+      });
+      _barcodeFocusNode.addListener(_handleFocusChange);
+    }
+  }
+
+  @override
+  void dispose() {
+    _barcodeController.dispose();
+    _barcodeFocusNode.removeListener(_handleFocusChange);
+    _barcodeFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _handleFocusChange() {
+    if (!mounted) return;
+    if (!_barcodeFocusNode.hasFocus) {
+      _barcodeFocusNode.requestFocus();
+    }
+  }
+
+  Future<void> _scanBarcodeMobile() async {
+    try {
+      String barcodeScanRes = await FlutterBarcodeScanner.scanBarcode(
+          '#ff6666', 'Annuler', true, ScanMode.BARCODE);
+
+      if (!mounted) return;
+
+      if (barcodeScanRes != '-1') {
+        _onBarcodeSubmitted(barcodeScanRes);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur du scanner: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _onBarcodeSubmitted(String barcode) async {
+    if (barcode.isEmpty) return;
+
+    final auth = context.read<AuthProvider>();
+    final db = DatabaseHelper.instance;
+
+    final product = await db.getProductByBarcode(barcode.trim());
+
+    if (mounted) {
+      if (product != null) {
+        if (product.stock > 0) {
+          auth.addToCart(product);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${product.name} ajouté au panier.'),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(8)),
+              ),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('\'${product.name}\' est en rupture de stock.'),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(8)),
+              ),
+            ),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Produit non trouvé pour le code-barres: $barcode'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(8)),
+            ),
+          ),
+        );
+      }
+    }
+
+    // Clear and re-focus for the next scan on desktop
+    if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
+      _barcodeController.clear();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -179,6 +287,8 @@ class _SalesScreenState extends State<SalesScreen> {
   }
 
   Widget _buildProductsSection(BuildContext context, bool isDesktop) {
+    final isMobile = !isDesktop && (Platform.isAndroid || Platform.isIOS);
+
     return Consumer<AuthProvider>(
       builder: (context, auth, _) {
         return Column(
@@ -188,6 +298,50 @@ class _SalesScreenState extends State<SalesScreen> {
               padding: EdgeInsets.all(isDesktop ? 32 : 20),
               child: Column(
                 children: [
+                  // Desktop Barcode Scanner
+                  if (!isMobile) ...[
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer
+                            .withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.5),
+                        ),
+                      ),
+                      child: TextField(
+                        controller: _barcodeController,
+                        focusNode: _barcodeFocusNode,
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          hintText: 'Scanner un code-barres...',
+                          hintStyle: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.7),
+                          ),
+                          prefixIcon: Icon(
+                            Icons.qr_code_scanner_rounded,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
+                        ),
+                        onSubmitted: _onBarcodeSubmitted,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+
                   // Search bar
                   Container(
                     decoration: BoxDecoration(
@@ -203,7 +357,7 @@ class _SalesScreenState extends State<SalesScreen> {
                     ),
                     child: TextField(
                       decoration: InputDecoration(
-                        hintText: 'Rechercher un produit...',
+                        hintText: 'Rechercher un produit par nom...',
                         hintStyle: TextStyle(
                           color: Theme.of(
                             context,
@@ -215,13 +369,23 @@ class _SalesScreenState extends State<SalesScreen> {
                             context,
                           ).colorScheme.onSurface.withOpacity(0.5),
                         ),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? IconButton(
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_searchQuery.isNotEmpty)
+                              IconButton(
                                 icon: const Icon(Icons.clear, size: 20),
                                 onPressed: () =>
                                     setState(() => _searchQuery = ''),
-                              )
-                            : null,
+                              ),
+                            if (isMobile)
+                              IconButton(
+                                icon: const Icon(Icons.qr_code_scanner_rounded),
+                                onPressed: _scanBarcodeMobile,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                          ],
+                        ),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 20,
