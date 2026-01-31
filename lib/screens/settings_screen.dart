@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+import 'dart:io';
 import '../auth_provider.dart';
 import '../widgets/app_sidebar.dart';
+import '../models.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -115,6 +120,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Future<void> _pickAndSaveLogo(AuthProvider auth) async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+    );
+
+    if (result != null && result.files.single.path != null) {
+      final sourceFile = File(result.files.single.path!);
+      final documentsDir = await getApplicationDocumentsDirectory();
+      
+      // Use a consistent filename for the logo
+      final fileExtension = p.extension(sourceFile.path);
+      final targetFile = File(p.join(documentsDir.path, 'shop_logo$fileExtension'));
+
+      // Copy the file to the app's documents directory
+      await sourceFile.copy(targetFile.path);
+
+      // Update the shop info with the new logo path
+      final updatedShopInfo = auth.shopInfo!.copyWith(logo: targetFile.path);
+      await auth.updateShopInfo(updatedShopInfo);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Logo mis à jour avec succès'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    }
+  }
+
   Widget _buildSettingsSections(
       BuildContext context, bool isDesktop, AuthProvider auth) {
     return Column(
@@ -151,6 +187,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _SettingsSection(
                   title: 'Informations Boutique',
                   icon: Icons.store_outlined,
+                  customHeader: auth.shopInfo?.logo != null
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: Container(
+                          width: 150,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Image.file(
+                            File(auth.shopInfo!.logo!),
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.store_mall_directory_outlined, size: 64),
+                          ),
+                        ),
+                      ),
+                    )
+                  : null,
                   children: [
                     _SettingsTile(
                       icon: Icons.business_outlined,
@@ -239,11 +294,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _SettingsTile(
                       icon: Icons.image_outlined,
                       title: 'Logo de la boutique',
-                      subtitle: 'À implémenter - Étape 3',
+                      subtitle: auth.shopInfo?.logo != null ? 'Changer le logo' : 'Ajouter un logo',
                       trailing: const Icon(Icons.chevron_right, size: 20),
-                      onTap: () {
-                        // TODO: Implémenter dans l'étape 3
-                      },
+                      onTap: () => _pickAndSaveLogo(auth),
                     ),
                   ],
                 ),
@@ -723,11 +776,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 class _SettingsSection extends StatelessWidget {
   final String title;
   final IconData icon;
+  final Widget? customHeader;
   final List<Widget> children;
 
   const _SettingsSection({
     required this.title,
     required this.icon,
+    this.customHeader,
     required this.children,
   });
 
@@ -745,7 +800,7 @@ class _SettingsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
             child: Row(
               children: [
                 Container(
@@ -770,6 +825,11 @@ class _SettingsSection extends StatelessWidget {
               ],
             ),
           ),
+          if (customHeader != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 20.0),
+              child: customHeader,
+            ),
           ...children,
         ],
       ),
@@ -799,9 +859,14 @@ class _SettingsTile extends StatelessWidget {
         Divider(
           height: 1,
           color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+          indent: 20,
+          endIndent: 20,
         ),
         InkWell(
           onTap: onTap,
+          borderRadius: (title == 'Logo de la boutique' || title == 'Contact Support') 
+            ? const BorderRadius.vertical(bottom: Radius.circular(16))
+            : BorderRadius.zero,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             child: Row(
