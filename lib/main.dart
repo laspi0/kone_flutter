@@ -49,4 +49,3 @@ class ShopManagerApp extends StatelessWidget {
     );
   }
 }
-//
