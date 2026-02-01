@@ -307,7 +307,7 @@ class ShopInfo {
         name: 'Mon Magasin',
         address: 'Votre adresse ici',
         phone: 'XX-XXX-XX-XX',
-        email: 'contact@email.com',
+        email: 'pro43071919@gmail.com',
         lowStockThreshold: 10,
       );
 

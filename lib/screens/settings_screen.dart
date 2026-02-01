@@ -339,7 +339,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _SettingsTile(
               icon: Icons.support_agent_outlined,
               title: 'Contact Support',
-              subtitle: 'support@shopmanager.com',
+              subtitle: 'pro4307191@gmail.com',
               trailing: const Icon(Icons.open_in_new, size: 20),
               onTap: () {
                 // TODO: Ouvrir email ou page de contact
