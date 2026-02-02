@@ -1,0 +1,9 @@
+{
+  "title": "Shop Manager",
+  "icon": "AppIcon.icns",
+  "background": "background.png",
+  "contents": [
+    { "x": 445, "y": 260, "type": "link", "path": "/Applications" },
+    { "x": 155, "y": 270, "type": "file", "path": "../../build/macos/Build/Products/Release/shop_manager.app" }
+  ]
+}
