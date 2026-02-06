@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../auth_provider.dart';
 import '../models.dart';
 import '../widgets/app_sidebar.dart';
+import '../widgets/access_denied.dart';
 
 class UserManagementScreen extends StatefulWidget {
   const UserManagementScreen({super.key});
@@ -27,6 +28,18 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isDesktop = size.width > 800;
+    final auth = context.watch<AuthProvider>();
+    final canManageAll = auth.currentUser?.isSuperuser ?? false;
+    final canManageCashier = auth.currentUser?.isAdmin ?? false;
+
+    if (!canManageAll && !canManageCashier) {
+      return const AccessDenied(
+        title: 'Accès refusé',
+        message: 'Cette section est réservée aux administrateurs.',
+        actionLabel: 'Retour à l\'accueil',
+        actionRoute: '/home',
+      );
+    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -58,7 +71,10 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateEditUserDialog(context),
+        onPressed: () => _showCreateEditUserDialog(
+          context,
+          restrictToCashier: !canManageAll,
+        ),
         backgroundColor: Theme.of(context).colorScheme.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
@@ -80,12 +96,17 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
               onPressed: () => context.go('/settings'),
             ),
           if (isDesktop) const SizedBox(width: 16),
-          Text(
-            'Gestion des Utilisateurs',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-              letterSpacing: -1,
-            ),
+          Consumer<AuthProvider>(
+            builder: (context, auth, _) {
+              final canManageAll = auth.currentUser?.isSuperuser ?? false;
+              return Text(
+                canManageAll ? 'Gestion des Utilisateurs' : 'Gestion des Caissiers',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -1,
+                ),
+              );
+            },
           ),
           const Spacer(),
           IconButton(
@@ -100,11 +121,16 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
   Widget _buildHeader(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, auth, _) {
+        final canManageAll = auth.currentUser?.isSuperuser ?? false;
+        final total = canManageAll
+            ? auth.users.length
+            : auth.users.where((user) => user.role == 'cashier').length;
+        final title = canManageAll ? 'Utilisateurs' : 'Caissiers';
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Utilisateurs',
+              title,
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                 fontWeight: FontWeight.w600,
                 letterSpacing: -1,
@@ -112,7 +138,7 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              '${auth.users.length} utilisateur${auth.users.length > 1 ? 's' : ''} trouvé${auth.users.length > 1 ? 's' : ''}',
+              '$total utilisateur${total > 1 ? 's' : ''} trouvé${total > 1 ? 's' : ''}',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface.withAlpha(128),
               ),
@@ -163,7 +189,9 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
           );
         }
 
+        final canManageAll = auth.currentUser?.isSuperuser ?? false;
         var filteredUsers = auth.users.where((user) {
+          if (!canManageAll && user.role != 'cashier') return false;
           return user.username.toLowerCase().contains(_searchQuery.toLowerCase());
         }).toList();
         
@@ -185,7 +213,11 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
             final user = filteredUsers[index];
             return _UserCard(
               user: user,
-              onTap: () => _showCreateEditUserDialog(context, user: user),
+              onTap: () => _showCreateEditUserDialog(
+                context,
+                user: user,
+                restrictToCashier: !canManageAll,
+              ),
               onDelete: () => _confirmDeleteUser(context, user),
             );
           },
@@ -194,8 +226,18 @@ class _UserManagementScreenState extends State<UserManagementScreen> {
     );
   }
 
-  void _showCreateEditUserDialog(BuildContext context, {User? user}) {
-    showDialog(context: context, builder: (context) => _UserDialog(user: user));
+  void _showCreateEditUserDialog(
+    BuildContext context, {
+    User? user,
+    bool restrictToCashier = false,
+  }) {
+    showDialog(
+      context: context,
+      builder: (context) => _UserDialog(
+        user: user,
+        restrictToCashier: restrictToCashier,
+      ),
+    );
   }
 
   void _confirmDeleteUser(BuildContext context, User user) {
@@ -350,7 +392,8 @@ class _UserCard extends StatelessWidget {
 
 class _UserDialog extends StatefulWidget {
   final User? user;
-  const _UserDialog({this.user});
+  final bool restrictToCashier;
+  const _UserDialog({this.user, this.restrictToCashier = false});
 
   @override
   State<_UserDialog> createState() => _UserDialogState();
@@ -368,7 +411,7 @@ class _UserDialogState extends State<_UserDialog> {
     super.initState();
     _usernameController = TextEditingController(text: widget.user?.username ?? '');
     _passwordController = TextEditingController();
-    _selectedRole = widget.user?.role;
+    _selectedRole = widget.restrictToCashier ? 'cashier' : widget.user?.role;
     _isActive = widget.user?.isActive ?? true;
   }
 
@@ -382,6 +425,7 @@ class _UserDialogState extends State<_UserDialog> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.user != null;
+    final restrictToCashier = widget.restrictToCashier;
 
     return AlertDialog(
       title: Text(isEditing ? 'Modifier l\'utilisateur' : 'Créer un utilisateur'),
@@ -417,16 +461,20 @@ class _UserDialogState extends State<_UserDialog> {
               DropdownButtonFormField<String>(
                 value: _selectedRole,
                 decoration: const InputDecoration(labelText: 'Rôle *', border: OutlineInputBorder()),
-                items: <String>['superuser', 'admin', 'cashier']
+                items: (restrictToCashier
+                        ? <String>['cashier']
+                        : <String>['superuser', 'admin', 'cashier'])
                     .map<DropdownMenuItem<String>>((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
                     child: Text(value.toUpperCase()),
                   );
                 }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() => _selectedRole = newValue);
-                },
+                onChanged: restrictToCashier
+                    ? null
+                    : (String? newValue) {
+                        setState(() => _selectedRole = newValue);
+                      },
                 validator: (value) => value == null ? 'Veuillez sélectionner un rôle' : null,
               ),
               const SizedBox(height: 16),
@@ -452,12 +500,13 @@ class _UserDialogState extends State<_UserDialog> {
     
     final auth = context.read<AuthProvider>();
     final isEditing = widget.user != null;
+    final selectedRole = widget.restrictToCashier ? 'cashier' : _selectedRole;
 
     if (isEditing) {
       final updatedUser = widget.user!.copyWith(
         username: _usernameController.text,
         passwordHash: _passwordController.text.isNotEmpty ? _passwordController.text : widget.user!.passwordHash,
-        role: _selectedRole,
+        role: selectedRole,
         isActive: _isActive,
       );
       await auth.updateUser(updatedUser);
@@ -465,7 +514,7 @@ class _UserDialogState extends State<_UserDialog> {
       final newUser = User(
         username: _usernameController.text,
         passwordHash: _passwordController.text,
-        role: _selectedRole!,
+        role: selectedRole!,
         isActive: _isActive,
       );
       await auth.createUser(newUser);
@@ -481,4 +530,3 @@ class _UserDialogState extends State<_UserDialog> {
     }
   }
 }
-

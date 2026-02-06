@@ -324,21 +324,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
         const SizedBox(height: 16),
 
-        // Section 4: Gestion des Utilisateurs (SUPERUSER uniquement)
+        // Section 4: Gestion des Utilisateurs (SUPERUSER / ADMIN)
         Consumer<AuthProvider>(
           builder: (context, auth, _) {
-            if (!auth.currentUser!.isSuperuser) return const SizedBox();
+            if (!auth.currentUser!.isSuperuser && !auth.currentUser!.isAdmin) {
+              return const SizedBox();
+            }
             
             return Column(
               children: [
                 _SettingsSection(
-                  title: 'Gestion des Utilisateurs',
+                  title: auth.currentUser!.isSuperuser
+                      ? 'Gestion des Utilisateurs'
+                      : 'Gestion des Caissiers',
                   icon: Icons.people_outline,
                   children: [
                     _SettingsTile(
                       icon: Icons.manage_accounts_outlined,
-                      title: 'Gérer les comptes utilisateurs',
-                      subtitle: 'Créer, modifier ou supprimer des utilisateurs',
+                      title: auth.currentUser!.isSuperuser
+                          ? 'Gérer les comptes utilisateurs'
+                          : 'Gérer les comptes caissiers',
+                      subtitle: auth.currentUser!.isSuperuser
+                          ? 'Créer, modifier ou supprimer des utilisateurs'
+                          : 'Créer, modifier ou supprimer des caissiers',
                       trailing: const Icon(Icons.chevron_right, size: 20),
                       onTap: () {
                         context.go('/users-management');
