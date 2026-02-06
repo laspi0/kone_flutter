@@ -61,7 +61,7 @@ class CategoriesScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border(
-          bottom: BorderSide(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05)),
+          bottom: BorderSide(color: Theme.of(context).colorScheme.onSurface.withAlpha(13)),
         ),
       ),
       child: Row(
@@ -102,7 +102,7 @@ class CategoriesScreen extends StatelessWidget {
             Text(
               '${auth.categories.length} catégorie${auth.categories.length > 1 ? 's' : ''} • ${auth.products.length} produit${auth.products.length > 1 ? 's' : ''}',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(128),
               ),
             ),
           ],
@@ -120,9 +120,9 @@ class CategoriesScreen extends StatelessWidget {
               padding: const EdgeInsets.all(64),
               child: Column(
                 children: [
-                  Icon(Icons.category_outlined, size: 64, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2)),
+                  Icon(Icons.category_outlined, size: 64, color: Theme.of(context).colorScheme.onSurface.withAlpha(51)),
                   const SizedBox(height: 16),
-                  Text('Aucune catégorie', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
+                  Text('Aucune catégorie', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withAlpha(128))),
                 ],
               ),
             ),
@@ -197,7 +197,7 @@ class _CategoryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05)),
+        border: Border.all(color: Theme.of(context).colorScheme.onSurface.withAlpha(13)),
       ),
       child: InkWell(
         onTap: onTap,
@@ -213,7 +213,7 @@ class _CategoryCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                      color: Theme.of(context).colorScheme.primary.withAlpha(38),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(Icons.category, size: 24, color: Theme.of(context).colorScheme.primary),
@@ -223,7 +223,7 @@ class _CategoryCard extends StatelessWidget {
                       onPressed: onDelete,
                       icon: Icon(Icons.delete_outline, size: 18, color: Theme.of(context).colorScheme.error),
                       style: IconButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.errorContainer.withOpacity(0.3),
+                        backgroundColor: Theme.of(context).colorScheme.errorContainer.withAlpha(77),
                         padding: const EdgeInsets.all(6),
                       ),
                     ),

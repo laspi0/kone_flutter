@@ -186,7 +186,7 @@ class _SalesScreenState extends State<SalesScreen> {
         color: Theme.of(context).colorScheme.surface,
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+            color: Theme.of(context).colorScheme.onSurface.withAlpha(20),
           ),
         ),
       ),
@@ -298,13 +298,13 @@ class _SalesScreenState extends State<SalesScreen> {
                         color: Theme.of(context)
                             .colorScheme
                             .primaryContainer
-                            .withOpacity(0.3),
+                            .withAlpha(77),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: Theme.of(context)
                               .colorScheme
                               .primary
-                              .withOpacity(0.5),
+                              .withAlpha(128),
                         ),
                       ),
                       child: TextField(
@@ -317,7 +317,7 @@ class _SalesScreenState extends State<SalesScreen> {
                             color: Theme.of(context)
                                 .colorScheme
                                 .primary
-                                .withOpacity(0.7),
+                                .withAlpha(179),
                           ),
                           prefixIcon: Icon(
                             Icons.qr_code_scanner_rounded,
@@ -345,7 +345,7 @@ class _SalesScreenState extends State<SalesScreen> {
                       border: Border.all(
                         color: Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.08),
+                        ).colorScheme.onSurface.withAlpha(20),
                       ),
                     ),
                     child: TextField(
@@ -354,13 +354,13 @@ class _SalesScreenState extends State<SalesScreen> {
                         hintStyle: TextStyle(
                           color: Theme.of(
                             context,
-                          ).colorScheme.onSurface.withOpacity(0.4),
+                          ).colorScheme.onSurface.withAlpha(102),
                         ),
                         prefixIcon: Icon(
                           Icons.search,
                           color: Theme.of(
                             context,
-                          ).colorScheme.onSurface.withOpacity(0.5),
+                          ).colorScheme.onSurface.withAlpha(128),
                         ),
                         suffixIcon: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -466,7 +466,7 @@ class _SalesScreenState extends State<SalesScreen> {
               child: Icon(
                 Icons.inventory_2_outlined,
                 size: 48,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(77),
               ),
             ),
             const SizedBox(height: 16),
@@ -474,7 +474,7 @@ class _SalesScreenState extends State<SalesScreen> {
               'Aucun produit disponible',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
               ),
             ),
             const SizedBox(height: 4),
@@ -483,7 +483,7 @@ class _SalesScreenState extends State<SalesScreen> {
                   ? 'Tous les produits sont en rupture'
                   : 'Essayez une autre recherche',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(102),
               ),
             ),
           ],
@@ -521,7 +521,7 @@ class _SalesScreenState extends State<SalesScreen> {
               left: BorderSide(
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.05),
+                ).colorScheme.onSurface.withAlpha(13),
               ),
             ),
           ),
@@ -563,7 +563,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                     ?.copyWith(
                                       color: Theme.of(
                                         context,
-                                      ).colorScheme.onSurface.withOpacity(0.5),
+                                      ).colorScheme.onSurface.withAlpha(128),
                                     ),
                               ),
                             ],
@@ -631,7 +631,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                       fontSize: 11,
                                       color: Theme.of(
                                         context,
-                                      ).colorScheme.onSurface.withOpacity(0.5),
+                                      ).colorScheme.onSurface.withAlpha(128),
                                     ),
                                   ),
                                   const SizedBox(height: 2),
@@ -650,7 +650,7 @@ class _SalesScreenState extends State<SalesScreen> {
                               Icons.arrow_drop_down,
                               color: Theme.of(
                                 context,
-                              ).colorScheme.onSurface.withOpacity(0.5),
+                              ).colorScheme.onSurface.withAlpha(128),
                             ),
                           ],
                         ),
@@ -663,7 +663,7 @@ class _SalesScreenState extends State<SalesScreen> {
                 height: 1,
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.08),
+                ).colorScheme.onSurface.withAlpha(20),
               ),
               // Cart Items
               Expanded(
@@ -677,7 +677,7 @@ class _SalesScreenState extends State<SalesScreen> {
                               size: 64,
                               color: Theme.of(
                                 context,
-                              ).colorScheme.onSurface.withOpacity(0.2),
+                              ).colorScheme.onSurface.withAlpha(51),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -687,7 +687,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                     fontWeight: FontWeight.w600,
                                     color: Theme.of(
                                       context,
-                                    ).colorScheme.onSurface.withOpacity(0.4),
+                                    ).colorScheme.onSurface.withAlpha(102),
                                   ),
                             ),
                             const SizedBox(height: 4),
@@ -697,7 +697,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                   ?.copyWith(
                                     color: Theme.of(
                                       context,
-                                    ).colorScheme.onSurface.withOpacity(0.3),
+                                    ).colorScheme.onSurface.withAlpha(77),
                                   ),
                             ),
                           ],
@@ -719,7 +719,7 @@ class _SalesScreenState extends State<SalesScreen> {
                   height: 1,
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.08),
+                  ).colorScheme.onSurface.withAlpha(20),
                 ),
                 Container(
                   padding: const EdgeInsets.all(24),
@@ -734,7 +734,7 @@ class _SalesScreenState extends State<SalesScreen> {
                                 ?.copyWith(
                                   color: Theme.of(
                                     context,
-                                  ).colorScheme.onSurface.withOpacity(0.6),
+                                  ).colorScheme.onSurface.withAlpha(153),
                                 ),
                           ),
                           Text(
@@ -806,7 +806,7 @@ class _SalesScreenState extends State<SalesScreen> {
                 decoration: BoxDecoration(
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.2),
+                  ).colorScheme.onSurface.withAlpha(51),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -844,9 +844,9 @@ class _SalesScreenState extends State<SalesScreen> {
             Text(
               'Total: ${auth.cartTotal.toStringAsFixed(0)} FCFA',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary,
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
             ),
             const SizedBox(height: 16),
             const Text('Confirmer cette vente ?'),
@@ -866,124 +866,132 @@ class _SalesScreenState extends State<SalesScreen> {
       ),
     );
 
-    if (confirmed == true) {
-      final result = await auth.completeSale();
+    if (confirmed != true) {
+      return;
+    }
 
-      if (result != null && context.mounted) {
-        final Sale sale = result['sale'];
-        final List<SaleItem> saleItems = result['saleItems'];
-        final Customer? customer = result['customer'];
+    final result = await auth.completeSale();
 
-        // Generate PDF
-        final pdfBytes = await PdfService().generateInvoicePdf(
-          sale,
-          saleItems,
-          customer,
-          auth.shopInfo!,
-          auth.currentUser!.username,
-        );
+    if (!mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Row(
-              children: [
-                Icon(Icons.check_circle, color: Colors.white),
-                SizedBox(width: 12),
-                Text('Vente enregistrée'),
-              ],
-            ),
-            backgroundColor: Colors.green,
-            behavior: SnackBarBehavior.floating,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(8)),
-            ),
-          ),
-        );
+    if (result != null) {
+      final Sale sale = result['sale'];
+      final List<SaleItem> saleItems = result['saleItems'];
+      final Customer? customer = result['customer'];
 
-        // Show dialog for print/save option
-        await showDialog(
-          context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: const Text('Facture Générée'),
-            content: const Text(
-              'Voulez-vous imprimer ou enregistrer la facture ?',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(dialogContext); // Close dialog
-                  Printing.layoutPdf(
-                    onLayout: (PdfPageFormat format) async => pdfBytes,
-                  );
-                },
-                child: const Text('Imprimer Facture'),
-              ),
-              FilledButton(
-                onPressed: () async {
-                  Navigator.pop(dialogContext); // Close dialog
+      // Generate PDF
+      final pdfBytes = await PdfService().generateInvoicePdf(
+        sale,
+        saleItems,
+        customer,
+        auth.shopInfo!,
+        auth.currentUser!.username,
+      );
 
-                  final fileName =
-                      'facture-${intl.DateFormat('yyyyMMdd-HHmmss').format(sale.date)}-${sale.id}.pdf';
-                  final savePath = await FilePicker.platform.saveFile(
-                    dialogTitle: 'Enregistrer la facture',
-                    fileName: fileName,
-                    type: FileType.custom,
-                    allowedExtensions: ['pdf'],
-                  );
+      if (!mounted) return;
 
-                  if (savePath != null) {
-                    final file = File(savePath);
-                    await file.writeAsBytes(pdfBytes);
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Facture enregistrée à: $savePath'),
-                          backgroundColor: Colors.blue,
-                          behavior: SnackBarBehavior.floating,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
-                          ),
-                        ),
-                      );
-                    }
-                  } else {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Enregistrement de la facture annulé.'),
-                          backgroundColor: Colors.orange,
-                          behavior: SnackBarBehavior.floating,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(8)),
-                          ),
-                        ),
-                      );
-                    }
-                  }
-                },
-                child: const Text('Enregistrer Facture'),
-              ),
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text('Vente enregistrée'),
             ],
           ),
-        );
-      } else if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(child: Text(auth.errorMessage ?? 'Erreur')),
-              ],
-            ),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(8)),
-            ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
           ),
-        );
-      }
+        ),
+      );
+
+      // Show dialog for print/save option
+      await showDialog(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Facture Générée'),
+          content: const Text(
+            'Voulez-vous imprimer ou enregistrer la facture ?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext); // Close dialog
+                Printing.layoutPdf(
+                  onLayout: (PdfPageFormat format) async => pdfBytes,
+                );
+              },
+              child: const Text('Imprimer Facture'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext); // Close dialog
+
+                if (!mounted) return;
+
+                final fileName =
+                    'facture-${intl.DateFormat('yyyyMMdd-HHmmss').format(sale.date)}-${sale.id}.pdf';
+                final savePath = await FilePicker.platform.saveFile(
+                  dialogTitle: 'Enregistrer la facture',
+                  fileName: fileName,
+                  type: FileType.custom,
+                  allowedExtensions: ['pdf'],
+                );
+
+                if (savePath != null) {
+                  final file = File(savePath);
+                  await file.writeAsBytes(pdfBytes);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Facture enregistrée à: $savePath'),
+                        backgroundColor: Colors.blue,
+                        behavior: SnackBarBehavior.floating,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                      ),
+                    );
+                  }
+                } else {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Enregistrement de la facture annulé.'),
+                        backgroundColor: Colors.orange,
+                        behavior: SnackBarBehavior.floating,
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(8)),
+                        ),
+                      ),
+                    );
+                  }
+                }
+              },
+              child: const Text('Enregistrer Facture'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text(auth.errorMessage ?? 'Erreur')),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(8)),
+          ),
+        ),
+      );
     }
   }
 
@@ -1115,7 +1123,7 @@ class _CustomerSelectorContentState extends State<_CustomerSelectorContent> {
                   Icons.search,
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.4),
+                  ).colorScheme.onSurface.withAlpha(102),
                 ),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
@@ -1150,18 +1158,17 @@ class _CustomerSelectorContentState extends State<_CustomerSelectorContent> {
                       size: 48,
                       color: Theme.of(
                         context,
-                      ).colorScheme.onSurface.withOpacity(0.3),
+                      ).colorScheme.onSurface.withAlpha(77),
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      'Aucun client trouvé',
-                      style: TextStyle(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.5),
-                      ),
-                    ),
-                  ],
+                                          Text(
+                                            'Aucun client trouvé',
+                                            style: TextStyle(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onSurface.withAlpha(128),
+                                            ),
+                                          ),                  ],
                 ),
               ),
             ),
@@ -1224,7 +1231,7 @@ class _CategoryChip extends StatelessWidget {
           border: Border.all(
             color: selected
                 ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+                : Theme.of(context).colorScheme.onSurface.withAlpha(26),
           ),
         ),
         child: Row(
@@ -1237,7 +1244,7 @@ class _CategoryChip extends StatelessWidget {
                 fontWeight: FontWeight.w600,
                 color: selected
                     ? Colors.white
-                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                    : Theme.of(context).colorScheme.onSurface.withAlpha(179),
               ),
             ),
             const SizedBox(width: 8),
@@ -1245,8 +1252,8 @@ class _CategoryChip extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: selected
-                    ? Colors.white.withOpacity(0.25)
-                    : Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                    ? Colors.white.withAlpha(64)
+                    : Theme.of(context).colorScheme.primary.withAlpha(38),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -1287,7 +1294,7 @@ class _ProductListItem extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+          color: Theme.of(context).colorScheme.onSurface.withAlpha(20),
         ),
       ),
       child: Material(
@@ -1359,8 +1366,8 @@ class _ProductListItem extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: isLowStock
-                                  ? Colors.orange.withOpacity(0.15)
-                                  : Colors.green.withOpacity(0.15),
+                                  ? Colors.orange.withAlpha(38)
+                                  : Colors.green.withAlpha(38),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Row(
@@ -1409,7 +1416,7 @@ class _ProductListItem extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.7),
+                        ).colorScheme.primary.withAlpha(179),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -1457,12 +1464,11 @@ class _CustomerTile extends StatelessWidget {
             ? Theme.of(context).colorScheme.primaryContainer
             : Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: selected
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-              : Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
-        ),
-      ),
+                  border: Border.all(
+                    color: selected
+                        ? Theme.of(context).colorScheme.primary.withAlpha(77)
+                        : Theme.of(context).colorScheme.onSurface.withAlpha(13),
+                  ),      ),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -1475,7 +1481,7 @@ class _CustomerTile extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: selected
-                      ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
+                      ? Theme.of(context).colorScheme.primary.withAlpha(51)
                       : Theme.of(context).colorScheme.surface,
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -1485,7 +1491,7 @@ class _CustomerTile extends StatelessWidget {
                       ? Theme.of(context).colorScheme.primary
                       : Theme.of(
                           context,
-                        ).colorScheme.onSurface.withOpacity(0.5),
+                        ).colorScheme.onSurface.withAlpha(128),
                   size: 22,
                 ),
               ),
@@ -1511,7 +1517,7 @@ class _CustomerTile extends StatelessWidget {
                           fontSize: 12,
                           color: Theme.of(
                             context,
-                          ).colorScheme.onSurface.withOpacity(0.5),
+                          ).colorScheme.onSurface.withAlpha(128),
                         ),
                       ),
                     ],
@@ -1547,7 +1553,7 @@ class _CartItem extends StatelessWidget {
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
+              color: Theme.of(context).colorScheme.onSurface.withAlpha(20),
             ),
           ),
           child: Column(
@@ -1586,7 +1592,7 @@ class _CartItem extends StatelessWidget {
                               ?.copyWith(
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.onSurface.withOpacity(0.5),
+                                ).colorScheme.onSurface.withAlpha(128),
                               ),
                         ),
                       ],
@@ -1599,7 +1605,7 @@ class _CartItem extends StatelessWidget {
                     style: IconButton.styleFrom(
                       backgroundColor: Theme.of(
                         context,
-                      ).colorScheme.errorContainer.withOpacity(0.5),
+                      ).colorScheme.errorContainer.withAlpha(128),
                       padding: const EdgeInsets.all(6),
                     ),
                   ),

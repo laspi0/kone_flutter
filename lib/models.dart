@@ -2,13 +2,15 @@ class User {
   final int? id;
   final String username;
   final String passwordHash;
-  final String role; // 'admin' ou 'cashier'
+  final String role; // 'admin', 'cashier', or 'superuser'
+  final bool isActive; // New field for account activation/deactivation
 
   User({
     this.id,
     required this.username,
     required this.passwordHash,
     required this.role,
+    this.isActive = true, // Default to true
   });
 
   Map<String, dynamic> toMap() {
@@ -17,6 +19,7 @@ class User {
       'username': username,
       'password_hash': passwordHash,
       'role': role,
+      'is_active': isActive ? 1 : 0, // Store boolean as integer
     };
   }
 
@@ -26,23 +29,27 @@ class User {
       username: map['username'],
       passwordHash: map['password_hash'],
       role: map['role'],
+      isActive: map['is_active'] == 1, // Convert integer back to boolean
     );
   }
 
-  bool get isAdmin => role == 'admin';
+  bool get isAdmin => role == 'admin' || role == 'superuser';
   bool get isCashier => role == 'cashier';
+  bool get isSuperuser => role == 'superuser'; // New getter for superuser role
 
   User copyWith({
     int? id,
     String? username,
     String? passwordHash,
     String? role,
+    bool? isActive,
   }) {
     return User(
       id: id ?? this.id,
       username: username ?? this.username,
       passwordHash: passwordHash ?? this.passwordHash,
       role: role ?? this.role,
+      isActive: isActive ?? this.isActive,
     );
   }
 }

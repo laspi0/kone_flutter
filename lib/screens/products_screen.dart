@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:excel/excel.dart' as exc;
+import 'package:file_picker/file_picker.dart';
 import '../auth_provider.dart';
 import '../models.dart';
 import '../widgets/app_sidebar.dart'; // New import
@@ -167,6 +169,33 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 ],
               ),
             ),
+            const SizedBox(height: 16), // Add some spacing for the new buttons
+            Consumer<AuthProvider>(
+              builder: (context, auth, _) {
+                if (!auth.isAdmin) return const SizedBox.shrink();
+                return Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: () => _importProductsFromExcel(context),
+                        icon: const Icon(Icons.upload_file),
+                        label: const Text('Importer depuis Excel'),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _generateExcelTemplate(context),
+                        icon: const Icon(Icons.download),
+                        label: const Text('Générer modèle Excel'),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
           ],
         );
       },
@@ -241,6 +270,396 @@ class _ProductsScreenState extends State<ProductsScreen> {
       ),
     );
   }
+
+  Future<void> _generateExcelTemplate(BuildContext context) async {
+    final excel = exc.Excel.createExcel();
+    final exc.Sheet sheet = excel['Products'];
+    // Make sure "Products" is the default visible sheet
+    excel.setDefaultSheet('Products');
+    // Remove the default empty sheet if it exists
+    if (excel.tables.containsKey('Sheet1')) {
+      excel.delete('Sheet1');
+    }
+
+    final headers = [
+      'Nom',
+      'Description',
+      'Prix',
+      'Stock',
+      'Catégorie',
+      'Code-barres'
+    ];
+
+    // Write headers
+    for (var i = 0; i < headers.length; i++) {
+      sheet.cell(exc.CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
+          .value = exc.TextCellValue(headers[i]);
+    }
+
+    final bytes = excel.encode();
+
+    if (bytes != null) {
+      final String? outputFile = await FilePicker.platform.saveFile(
+        fileName: 'modele_produits.xlsx',
+        type: FileType.custom,
+        allowedExtensions: ['xlsx'],
+      );
+
+      if (outputFile != null) {
+        final file = File(outputFile);
+        await file.writeAsBytes(bytes);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Modèle Excel généré et sauvegardé à : $outputFile'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Génération de modèle annulée.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erreur lors de la génération du modèle Excel.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _importProductsFromExcel(BuildContext context) async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['xlsx'],
+      );
+
+      if (result == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Importation annulée.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      final filePath = result.files.single.path!;
+      final bytes = File(filePath).readAsBytesSync();
+      final excel = exc.Excel.decodeBytes(bytes);
+
+      final exc.Sheet? sheet = excel.tables[excel.tables.keys.first];
+      if (sheet == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Fichier Excel vide ou format invalide.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      final headers = sheet
+          .row(0)
+          .map((cell) => cell?.value.toString() ?? '')
+          .toList();
+      final headerIndex = <String, int>{};
+      for (var i = 0; i < headers.length; i++) {
+        final normalized = _normalizeHeader(headers[i]);
+        if (normalized.isNotEmpty) {
+          headerIndex[normalized] = i;
+        }
+      }
+
+      final requiredHeaders = <String, String>{
+        'nom': 'Nom',
+        'description': 'Description',
+        'prix': 'Prix',
+        'stock': 'Stock',
+        'categorie': 'Catégorie',
+        'codebarres': 'Code-barres',
+      };
+
+      final missing = requiredHeaders.keys
+          .where((key) => !headerIndex.containsKey(key))
+          .toList();
+
+      if (missing.isNotEmpty) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'En-têtes manquants ou invalides: ${missing.map((m) => requiredHeaders[m]).join(', ')}',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      final auth = context.read<AuthProvider>();
+      int importedCount = 0;
+      int updatedCount = 0;
+      final List<String> errors = [];
+      final List<String> warnings = [];
+
+      for (var i = 1; i < sheet.maxRows; i++) { // Skip header row
+        final row = sheet.row(i);
+        if (row.every((cell) => cell?.value == null)) continue; // Skip empty rows
+
+        String name = _cellValue(row, headerIndex['nom']!);
+        String description = _cellValue(row, headerIndex['description']!);
+        double? price = _parseDouble(_cellValue(row, headerIndex['prix']!));
+        int? stock = _parseInt(_cellValue(row, headerIndex['stock']!));
+        String categoryName = _cellValue(row, headerIndex['categorie']!);
+        String barcode = _cellValue(row, headerIndex['codebarres']!);
+
+        if (name.isEmpty || price == null || price <= 0 || stock == null || stock < 0 || categoryName.isEmpty) {
+          errors.add('Ligne ${i + 1}: données invalides (Nom/Prix/Stock/Catégorie).');
+          continue;
+        }
+
+        // Handle category: find or create
+        final normalizedCategory = _normalizeText(categoryName);
+        Category? category = auth.categories.firstWhere(
+          (cat) => _normalizeText(cat.name) == normalizedCategory,
+          orElse: () => Category(id: null, name: categoryName), // Temporary local Category object
+        );
+
+        if (category.id == null) {
+          // Category does not exist, create it
+          await auth.addCategory(category);
+          // Reload categories to get the new category with its ID
+          await auth.loadCategories();
+          category = auth.categories.firstWhere(
+            (cat) => _normalizeText(cat.name) == normalizedCategory,
+          );
+        }
+
+        // Check for existing product by name or barcode
+        Product? existingProduct;
+        if (barcode.isNotEmpty) {
+          existingProduct = auth.products.firstWhere(
+            (p) => p.barcode == barcode,
+            orElse: () => Product(id: null, name: '', description: '', price: 0, stock: 0, categoryId: 0, barcode: ''),
+          );
+          if (existingProduct.id == null) existingProduct = null;
+        }
+        final normalizedName = _normalizeText(name);
+        if (existingProduct == null) {
+          existingProduct = auth.products.firstWhere(
+            (p) => _normalizeText(p.name) == normalizedName,
+            orElse: () => Product(id: null, name: '', description: '', price: 0, stock: 0, categoryId: 0, barcode: ''),
+          );
+          if (existingProduct.id == null) existingProduct = null;
+        }
+
+        if (existingProduct == null) {
+          final nearMatches = _findNearNameMatches(normalizedName, auth.products);
+          if (nearMatches.isNotEmpty) {
+            warnings.add(
+              'Ligne ${i + 1}: nom proche de ${nearMatches.join(', ')}',
+            );
+          }
+        }
+
+
+        Product newProduct = Product(
+          id: existingProduct?.id, // Use existing ID if found
+          name: name,
+          description: description.isEmpty ? null : description,
+          price: price,
+          stock: stock,
+          categoryId: category.id!,
+          barcode: barcode.isEmpty ? null : barcode,
+        );
+
+        if (existingProduct != null) {
+          await auth.updateProduct(newProduct);
+          updatedCount++;
+        } else {
+          await auth.addProduct(newProduct);
+          importedCount++;
+        }
+      }
+
+        if (context.mounted) {
+        await _showImportResultDialog(
+          context,
+          importedCount,
+          updatedCount,
+          errors,
+          warnings,
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors de l\'importation du fichier Excel: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+}
+
+String _normalizeHeader(String value) {
+  return _normalizeText(value);
+}
+
+String _normalizeText(String value) {
+  final trimmed = value.trim().toLowerCase();
+  final withoutAccents = trimmed
+      .replaceAll('é', 'e')
+      .replaceAll('è', 'e')
+      .replaceAll('ê', 'e')
+      .replaceAll('ë', 'e')
+      .replaceAll('à', 'a')
+      .replaceAll('â', 'a')
+      .replaceAll('ä', 'a')
+      .replaceAll('î', 'i')
+      .replaceAll('ï', 'i')
+      .replaceAll('ô', 'o')
+      .replaceAll('ö', 'o')
+      .replaceAll('ù', 'u')
+      .replaceAll('û', 'u')
+      .replaceAll('ü', 'u')
+      .replaceAll('ç', 'c');
+  return withoutAccents.replaceAll(RegExp(r'[^a-z0-9]'), '');
+}
+
+String _cellValue(List<exc.Data?> row, int index) {
+  if (index >= row.length) return '';
+  final value = row[index]?.value;
+  return value == null ? '' : value.toString().trim();
+}
+
+double? _parseDouble(String raw) {
+  if (raw.isEmpty) return null;
+  var cleaned = raw.replaceAll('\u00A0', ' ').trim();
+  cleaned = cleaned.replaceAll(RegExp(r'[^\d,.\-]'), '');
+  if (cleaned.isEmpty) return null;
+  if (cleaned.contains(',') && !cleaned.contains('.')) {
+    cleaned = cleaned.replaceAll(',', '.');
+  } else {
+    cleaned = cleaned.replaceAll(',', '');
+  }
+  return double.tryParse(cleaned);
+}
+
+int? _parseInt(String raw) {
+  if (raw.isEmpty) return null;
+  var cleaned = raw.replaceAll('\u00A0', ' ').trim();
+  cleaned = cleaned.replaceAll(RegExp(r'[^\d\-]'), '');
+  if (cleaned.isEmpty) return null;
+  return int.tryParse(cleaned);
+}
+
+Future<void> _showImportResultDialog(
+  BuildContext context,
+  int importedCount,
+  int updatedCount,
+  List<String> errors,
+  List<String> warnings,
+) async {
+  final hasErrors = errors.isNotEmpty;
+  final hasWarnings = warnings.isNotEmpty;
+  final preview = errors.take(10).toList();
+  final warningPreview = warnings.take(10).toList();
+  await showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Importation terminée'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Nouveaux produits: $importedCount\n'
+              'Produits mis à jour: $updatedCount',
+            ),
+            if (hasWarnings) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Avertissements (${warnings.length})',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              ...warningPreview.map((e) => Text('- $e')),
+              if (warnings.length > warningPreview.length)
+                Text('... +${warnings.length - warningPreview.length} autres'),
+            ],
+            if (hasErrors) ...[
+              const SizedBox(height: 16),
+              Text(
+                'Erreurs (${errors.length})',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              ...preview.map((e) => Text('- $e')),
+              if (errors.length > preview.length)
+                Text('... +${errors.length - preview.length} autres'),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('OK'),
+        ),
+      ],
+    ),
+  );
+}
+
+List<String> _findNearNameMatches(
+  String normalizedName,
+  List<Product> products,
+) {
+  if (normalizedName.isEmpty) return [];
+  final results = <String>[];
+  for (final product in products) {
+    final normalizedExisting = _normalizeText(product.name);
+    if (normalizedExisting.isEmpty || normalizedExisting == normalizedName) {
+      continue;
+    }
+    final contains = normalizedExisting.contains(normalizedName) ||
+        normalizedName.contains(normalizedExisting);
+    final prefixRatio = _commonPrefixRatio(normalizedExisting, normalizedName);
+    final lengthDiff =
+        (normalizedExisting.length - normalizedName.length).abs();
+    final isNear = contains || (prefixRatio >= 0.85 && lengthDiff <= 3);
+    if (isNear) {
+      results.add('"${product.name}"');
+      if (results.length >= 3) break;
+    }
+  }
+  return results;
+}
+
+double _commonPrefixRatio(String a, String b) {
+  final minLen = a.length < b.length ? a.length : b.length;
+  int i = 0;
+  while (i < minLen && a[i] == b[i]) {
+    i++;
+  }
+  final maxLen = a.length > b.length ? a.length : b.length;
+  if (maxLen == 0) return 0;
+  return i / maxLen;
 }
 
 

@@ -7,7 +7,7 @@ import 'models.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
-  static const int databaseVersion = 9; // Mise à jour de la version de la base de données
+  static const int databaseVersion = 11; // Mise à jour de la version de la base de données
 
   DatabaseHelper._init();
 
@@ -131,8 +131,39 @@ class DatabaseHelper {
         await db.execute('ALTER TABLE shop_info ADD COLUMN low_stock_threshold INTEGER NOT NULL DEFAULT 10');
       } catch (e) {
         // Column likely already exists, which is fine.
-        print('Could not add low_stock_threshold column: $e');
+
       }
+    }
+    if (oldVersion < 10) {
+      // Add is_active column to users table
+      await db.execute('ALTER TABLE users ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1');
+      
+      // Also add the superuser if it doesn't exist, for existing databases
+      await db.insert(
+        'users',
+        {
+          'username': 'superuser',
+          'password_hash': 'superuser123',
+          'role': 'superuser',
+          'is_active': 1,
+        },
+        conflictAlgorithm: ConflictAlgorithm.ignore, // Ignore if 'superuser' already exists
+      );
+    }
+    if (oldVersion < 11) {
+
+      // Re-run superuser creation just in case it failed before.
+      await db.insert(
+        'users',
+        {
+          'username': 'superuser',
+          'password_hash': 'superuser123',
+          'role': 'superuser',
+          'is_active': 1,
+        },
+        conflictAlgorithm: ConflictAlgorithm.ignore, // Ignore if 'superuser' already exists
+      );
+
     }
   }
 
@@ -142,7 +173,8 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         username TEXT NOT NULL UNIQUE,
         password_hash TEXT NOT NULL,
-        role TEXT NOT NULL
+        role TEXT NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1
       )
     ''');
 
@@ -228,18 +260,28 @@ class DatabaseHelper {
       'username': 'admin',
       'password_hash': 'admin123',
       'role': 'admin',
+      'is_active': 1,
     });
 
     await db.insert('users', {
       'username': 'caissier',
       'password_hash': 'caissier123',
       'role': 'cashier',
+      'is_active': 1,
     });
 
     await db.insert('users', {
       'username': 'marie',
       'password_hash': 'marie123',
       'role': 'cashier',
+      'is_active': 1,
+    });
+
+    await db.insert('users', {
+      'username': 'superuser',
+      'password_hash': 'superuser123',
+      'role': 'superuser',
+      'is_active': 1,
     });
 
     await _insertDefaultCategories(db);
@@ -581,6 +623,16 @@ class DatabaseHelper {
   }
 
   // User operations
+  Future<int> insertUser(User user) async {
+    final db = await database;
+    return await db.insert('users', user.toMap());
+  }
+
+  Future<int> deleteUser(int id) async {
+    final db = await database;
+    return await db.delete('users', where: 'id = ?', whereArgs: [id]);
+  }
+
   Future<int> updateUser(User user) async {
     final db = await database;
     return await db.update(

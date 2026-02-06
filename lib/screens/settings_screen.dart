@@ -7,7 +7,6 @@ import 'package:path/path.dart' as p;
 import 'dart:io';
 import '../auth_provider.dart';
 import '../widgets/app_sidebar.dart';
-import '../models.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -66,7 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         color: Theme.of(context).colorScheme.surface,
         border: Border(
           bottom: BorderSide(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+            color: Theme.of(context).colorScheme.onSurface.withAlpha(13),
           ),
         ),
       ),
@@ -113,7 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: Theme.of(context)
                     .colorScheme
                     .onSurface
-                    .withOpacity(0.6),
+                    .withAlpha(153),
               ),
         ),
       ],
@@ -325,7 +324,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
         const SizedBox(height: 16),
 
-        // Section 4: À propos
+        // Section 4: Gestion des Utilisateurs (SUPERUSER uniquement)
+        Consumer<AuthProvider>(
+          builder: (context, auth, _) {
+            if (!auth.currentUser!.isSuperuser) return const SizedBox();
+            
+            return Column(
+              children: [
+                _SettingsSection(
+                  title: 'Gestion des Utilisateurs',
+                  icon: Icons.people_outline,
+                  children: [
+                    _SettingsTile(
+                      icon: Icons.manage_accounts_outlined,
+                      title: 'Gérer les comptes utilisateurs',
+                      subtitle: 'Créer, modifier ou supprimer des utilisateurs',
+                      trailing: const Icon(Icons.chevron_right, size: 20),
+                      onTap: () {
+                        context.go('/users-management');
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
+            );
+          },
+        ),
+
+        // Section 5: À propos
         _SettingsSection(
           title: 'À propos',
           icon: Icons.info_outline,
@@ -358,7 +385,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: Theme.of(context).colorScheme.errorContainer,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Theme.of(context).colorScheme.error.withOpacity(0.3),
+              color: Theme.of(context).colorScheme.error.withAlpha(77),
             ),
           ),
           child: Row(
@@ -386,7 +413,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         color: Theme.of(context)
                             .colorScheme
                             .error
-                            .withOpacity(0.7),
+                            .withAlpha(179),
                       ),
                     ),
                   ],
@@ -793,7 +820,7 @@ class _SettingsSection extends StatelessWidget {
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+          color: Theme.of(context).colorScheme.onSurface.withAlpha(13),
         ),
       ),
       child: Column(
@@ -858,7 +885,7 @@ class _SettingsTile extends StatelessWidget {
       children: [
         Divider(
           height: 1,
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+          color: Theme.of(context).colorScheme.onSurface.withAlpha(13),
           indent: 20,
           endIndent: 20,
         ),
@@ -877,7 +904,7 @@ class _SettingsTile extends StatelessWidget {
                   color: Theme.of(context)
                       .colorScheme
                       .onSurface
-                      .withOpacity(0.6),
+                      .withAlpha(153),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -900,7 +927,7 @@ class _SettingsTile extends StatelessWidget {
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withOpacity(0.5),
+                                .withAlpha(128),
                           ),
                         ),
                       ],

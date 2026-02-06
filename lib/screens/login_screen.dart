@@ -70,7 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                            color: Theme.of(context).colorScheme.primary.withAlpha(77),
                             blurRadius: 12,
                             offset: const Offset(0, 4),
                           ),
@@ -100,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         Text(
                           'Connectez-vous à votre espace',
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                            color: Theme.of(context).colorScheme.onSurface.withAlpha(128),
                           ),
                         ),
                       ],
@@ -122,7 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       hintText: 'Entrez votre identifiant',
                       prefixIcon: Icon(
                         Icons.person_outline,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                        color: Theme.of(context).colorScheme.onSurface.withAlpha(102),
                       ),
                       filled: true,
                       fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -173,12 +173,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       hintText: 'Entrez votre mot de passe',
                       prefixIcon: Icon(
                         Icons.lock_outline,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                        color: Theme.of(context).colorScheme.onSurface.withAlpha(102),
                       ),
                       suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                          color: Theme.of(context).colorScheme.onSurface.withAlpha(102),
                         ),
                         onPressed: () {
                           setState(() => _obscurePassword = !_obscurePassword);
@@ -227,7 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.errorContainer.withOpacity(0.5),
+                              color: Theme.of(context).colorScheme.errorContainer.withAlpha(128),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -299,7 +299,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     children: [
                       Expanded(
                         child: Divider(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+                          color: Theme.of(context).colorScheme.onSurface.withAlpha(26),
                         ),
                       ),
                       Padding(
@@ -308,13 +308,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           'Accès rapide',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                            color: Theme.of(context).colorScheme.onSurface.withAlpha(102),
                           ),
                         ),
                       ),
                       Expanded(
                         child: Divider(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+                          color: Theme.of(context).colorScheme.onSurface.withAlpha(26),
                         ),
                       ),
                     ],
@@ -369,7 +369,7 @@ class _QuickAccessButton extends StatelessWidget {
           color: Theme.of(context).colorScheme.primaryContainer,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            color: Theme.of(context).colorScheme.primary.withAlpha(77),
           ),
         ),
         child: Text(

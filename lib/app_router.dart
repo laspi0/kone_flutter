@@ -7,6 +7,7 @@ import 'screens/sales_screen.dart';
 import 'screens/sale_history_screen.dart';
 import 'screens/customers_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/user_management_screen.dart'; // New import
 
 class AppRouter {
   static final router = GoRouter(
@@ -52,6 +53,12 @@ class AppRouter {
         pageBuilder: (context, state) =>
             const NoTransitionPage(child: SettingsScreen()),
       ),
+      GoRoute( // New route for user management
+        path: '/users-management',
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: UserManagementScreen()),
+      ),
     ],
   );
 }
+

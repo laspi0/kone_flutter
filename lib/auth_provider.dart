@@ -36,6 +36,7 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoggedIn => _currentUser != null;
   bool get isAdmin => _currentUser?.isAdmin ?? false;
   bool get isCashier => _currentUser?.isCashier ?? false;
+  bool get isSuperuser => _currentUser?.isSuperuser ?? false; // New getter
 
   double get cartTotal => _cart.fold(0, (sum, item) => sum + item.subtotal);
   int get cartItemCount => _cart.fold(0, (sum, item) => sum + item.quantity);
@@ -49,12 +50,17 @@ class AuthProvider extends ChangeNotifier {
     try {
       final user = await _db.login(username, password);
 
-      if (user != null) {
+      if (user != null && user.isActive) { // Check if user is active
         _currentUser = user;
         await _loadData();
         _isLoading = false;
         notifyListeners();
         return true;
+      } else if (user != null && !user.isActive) {
+        _errorMessage = 'Votre compte est désactivé.';
+        _isLoading = false;
+        notifyListeners();
+        return false;
       } else {
         _errorMessage = 'Identifiants incorrects';
         _isLoading = false;
@@ -95,6 +101,26 @@ class AuthProvider extends ChangeNotifier {
   Future<void> loadUsers() async {
     _users = await _db.getAllUsers();
     notifyListeners();
+  }
+
+  // New User Management Methods
+  Future<void> createUser(User user) async {
+    await _db.insertUser(user);
+    await loadUsers();
+  }
+
+  Future<void> updateUser(User user) async {
+    await _db.updateUser(user);
+    await loadUsers();
+    // If the updated user is the current logged-in user, refresh _currentUser
+    if (_currentUser?.id == user.id) {
+      _currentUser = user;
+    }
+  }
+
+  Future<void> deleteUser(int userId) async {
+    await _db.deleteUser(userId);
+    await loadUsers();
   }
 
   Future<void> loadShopInfo() async {
@@ -323,8 +349,5 @@ class AuthProvider extends ChangeNotifier {
     return await _db.getSaleItems(saleId);
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
+
 }

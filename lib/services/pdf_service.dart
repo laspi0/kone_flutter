@@ -32,7 +32,7 @@ class PdfService {
           logoWidget = pw.Image(logoImage, height: 40); // Hauteur du logo
         }
       } catch (e) {
-        print("Could not load logo for PDF: $e");
+
       }
     }
 
