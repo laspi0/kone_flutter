@@ -1,10 +1,10 @@
 # shop_manager
 
-# Shop Manager - Étape 1 : Login/Logout
+# Shop Manager
 
 ## 🎯 Objectif
 
-Mettre en place l'authentification de base avec gestion des rôles (Admin et Caissier).
+Application de gestion de boutique avec authentification multi-rôles, gestion produits, ventes, clients et outils d'administration.
 
 ## ✅ Fonctionnalités implémentées
 
@@ -18,10 +18,10 @@ Mettre en place l'authentification de base avec gestion des rôles (Admin et Cai
 
 ### 2. Gestion des rôles
 
-- ✅ **Admin** : Accès complet (futur)
-- ✅ **Caissier** : Accès limité (futur)
+- ✅ **Superuser** : Gestion des comptes utilisateurs
+- ✅ **Admin** : Gestion produits, catégories, clients
+- ✅ **Caissier** : Point de vente et historique
 - ✅ Badge de rôle sur l'écran d'accueil
-- ✅ Affichage des permissions
 
 ### 3. Interface
 
@@ -33,24 +33,39 @@ Mettre en place l'authentification de base avec gestion des rôles (Admin et Cai
 ### 4. Sécurité (Basique)
 
 - ✅ Authentification SQLite
-- ✅ 3 comptes de test
+- ✅ Comptes de test
 - ⚠️ Note : Mot de passe en clair (à améliorer en production avec bcrypt)
+
+### 5. Produits (Admin)
+
+- ✅ CRUD produits + catégories
+- ✅ Import Excel (.xlsx) avec validation
+- ✅ Export modèle Excel
 
 ## 📁 Structure du projet
 
 ```
 lib/
-├── main.dart                 # Point d'entrée
-├── models.dart              # Modèle User
-├── database.dart            # SQLite helper
-├── auth_provider.dart       # State management (Provider)
-├── app_router.dart          # Navigation (GoRouter)
+├── main.dart                      # Point d'entrée
+├── models.dart                    # Modèles
+├── database.dart                  # SQLite helper
+├── auth_provider.dart             # State management (Provider)
+├── app_router.dart                # Navigation (GoRouter)
+├── widgets/
+│   └── app_sidebar.dart           # Sidebar
 └── screens/
-    ├── login_screen.dart    # Écran de connexion
-    └── home_screen.dart     # Écran d'accueil
+    ├── login_screen.dart          # Écran de connexion
+    ├── home_screen.dart           # Écran d'accueil
+    ├── products_screen.dart       # Produits + import Excel
+    ├── categories_screen.dart     # Catégories
+    ├── sales_screen.dart          # Ventes
+    ├── sale_history_screen.dart   # Historique des ventes
+    ├── customers_screen.dart      # Clients
+    ├── settings_screen.dart       # Paramètres
+    └── user_management_screen.dart# Gestion utilisateurs
 ```
 
-**Total : 7 fichiers**
+**Note** : La structure peut évoluer avec les fonctionnalités.
 
 ## 🚀 Installation
 
@@ -104,11 +119,12 @@ flutter run -d ios
 ## 🔐 Comptes de test
 
 
-| Rôle    | Username | Password    |
-| -------- | -------- | ----------- |
-| Admin    | admin    | admin123    |
-| Caissier | caissier | caissier123 |
-| Caissier | marie    | marie123    |
+| Rôle      | Username  | Password      |
+| --------- | --------- | ------------- |
+| Superuser | superuser | superuser123  |
+| Admin     | admin     | admin123      |
+| Caissier  | caissier  | caissier123   |
+| Caissier  | marie     | marie123      |
 
 ## 🎨 Fonctionnalités UI
 
@@ -126,57 +142,34 @@ flutter run -d ios
 
 - Avatar avec icône selon le rôle
 - Message de bienvenue personnalisé
-- Badge de rôle (Admin/Caissier)
+- Badge de rôle (Superuser/Admin/Caissier)
 - Liste des permissions
 - Bouton de déconnexion
 - Drawer avec navigation
 - Toggle thème clair/sombre
 
+### Produits (Admin)
+
+- Import Excel (.xlsx) tolérant aux variations d’en-têtes
+- Parsing nombre tolérant (`12 000`, `12,5`)
+- Rapport d’erreurs et avertissements “nom proche”
+
 ## 🧪 Tester l'application
 
 1. **Lancer l'app** → Écran de login s'affiche
-2. **Se connecter** avec `admin` / `admin123`
-3. **Vérifier** l'écran d'accueil avec badge "Administrateur"
-4. **Tester** le toggle thème (bouton en haut)
-5. **Ouvrir** le drawer (menu hamburger)
-6. **Se déconnecter** (bouton rouge ou via drawer)
-7. **Se reconnecter** avec `caissier` / `caissier123`
-8. **Vérifier** le badge "Caissier" et permissions limitées
+2. **Se connecter** avec `superuser` / `superuser123`
+3. **Ouvrir** `Paramètres` → `Gestion des utilisateurs`
+4. **Créer/éditer** un compte Admin ou Caissier
+5. **Se connecter** avec `admin` / `admin123`
+6. **Tester** import Excel sur la page Produits
 
 ## 🔄 Prochaines étapes
 
-### Étape 2 : Dashboard
+### Idées futures
 
-- Tableau de bord avec statistiques
-- Widgets de statistiques
-- Navigation vers les autres écrans
-
-### Étape 3 : Gestion des clients
-
-- Liste des clients
-- CRUD complet (Create, Read, Update, Delete)
-- Recherche
-
-### Étape 4 : Gestion des produits
-
-- Liste des produits
-- CRUD complet
-- Gestion des catégories
-- Gestion du stock
-
-### Étape 5 : Système de vente
-
-- Panier
-- Sélection client
-- Sélection produits
-- Validation vente
-- Mise à jour stock
-
-### Étape 6 : Historique
-
-- Liste des ventes
-- Détails des ventes
-- Filtres et recherche
+- Historique détaillé des actions Superuser
+- Export CSV/XLSX des produits
+- Rôles/permissions personnalisés
 
 ## 📝 Notes techniques
 
