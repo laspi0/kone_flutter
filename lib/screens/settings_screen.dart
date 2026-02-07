@@ -442,7 +442,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // ========== DIALOGUES POUR PROFIL UTILISATEUR ==========
+  // ========== DIALOGUES POUR PROFIL UTILISATEUR ========== 
 
   void _showEditUsernameDialog(BuildContext context) {
     final auth = context.read<AuthProvider>();
@@ -678,7 +678,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // ========== DIALOGUES POUR INFORMATIONS BOUTIQUE ==========
+  // ========== DIALOGUES POUR INFORMATIONS BOUTIQUE ========== 
 
   void _showEditShopInfoDialog(
       BuildContext context,
@@ -739,7 +739,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  // ========== DIALOGUES POUR ALERTES ==========
+  // ========== DIALOGUES POUR ALERTES ========== 
 
   void _showEditLowStockThresholdDialog(
       BuildContext context, AuthProvider auth) {
@@ -806,7 +806,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-// ========== WIDGETS RÉUTILISABLES ==========
+// ========== WIDGETS RÉUTILISABLES ========== 
 
 class _SettingsSection extends StatelessWidget {
   final String title;

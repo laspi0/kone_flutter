@@ -349,5 +349,38 @@ class AuthProvider extends ChangeNotifier {
     return await _db.getSaleItems(saleId);
   }
 
+  Future<void> deleteSale(int saleId) async {
+    await _db.deleteSale(saleId);
+    await loadSales();
+  }
 
+  Future<void> deleteSalesLastMonth() async {
+    final cutoffDate = DateTime.now().subtract(const Duration(days: 30));
+    await _db.deleteSalesOlderThan(cutoffDate.toIso8601String());
+    await loadSales();
+  }
+
+  Future<void> deleteSalesLastYear() async {
+    final cutoffDate = DateTime.now().subtract(const Duration(days: 365));
+    await _db.deleteSalesOlderThan(cutoffDate.toIso8601String());
+    await loadSales();
+  }
+
+  // --- Data Clearing Methods ---
+
+  Future<void> deleteAllSales() async {
+    await _db.clearSalesHistory();
+    await loadSales();
+  }
+
+  Future<void> clearCustomers() async {
+    await _db.clearCustomers();
+    await loadCustomers();
+  }
+
+  Future<void> clearProductsAndCategories() async {
+    await _db.clearProductsAndCategories();
+    await loadProducts();
+    await loadCategories();
+  }
 }

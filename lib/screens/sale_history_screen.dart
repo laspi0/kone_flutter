@@ -19,6 +19,117 @@ class _SaleHistoryScreenState extends State<SaleHistoryScreen> {
   int? _selectedUserId;
   int? _selectedCustomerId;
 
+  // Method to show password confirmation for bulk actions
+  void _showPasswordConfirmationDialog({
+    required BuildContext context,
+    required String title,
+    required String content,
+    required Future<void> Function() onConfirm,
+  }) {
+    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    final auth = context.read<AuthProvider>();
+    bool obscurePassword = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: Text('⚠️ $title'),
+            content: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Cette action est IRREVERSIBLE.',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(content),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Pour confirmer, veuillez entrer votre mot de passe.',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: passwordController,
+                      obscureText: obscurePassword,
+                      decoration: InputDecoration(
+                        labelText: 'Mot de passe',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            obscurePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                          ),
+                          onPressed: () {
+                            setState(() => obscurePassword = !obscurePassword);
+                          },
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Le mot de passe est requis';
+                        }
+                        if (value != auth.currentUser!.passwordHash) {
+                          return 'Mot de passe incorrect';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Annuler'),
+              ),
+              FilledButton.icon(
+                icon: const Icon(Icons.delete_forever),
+                label: const Text('Supprimer'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                  foregroundColor: Theme.of(context).colorScheme.onError,
+                ),
+                onPressed: () async {
+                  if (formKey.currentState!.validate()) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('$title en cours...')),
+                    );
+                    await onConfirm();
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Opération terminée avec succès.'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -59,6 +170,7 @@ class _SaleHistoryScreenState extends State<SaleHistoryScreen> {
   }
 
   Widget _buildTopBar(BuildContext context, bool isDesktop) {
+    final auth = context.watch<AuthProvider>();
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: isDesktop ? 40 : 20,
@@ -80,18 +192,60 @@ class _SaleHistoryScreenState extends State<SaleHistoryScreen> {
               onPressed: () => context.go('/home'),
             ),
           const Spacer(),
-          Consumer<AuthProvider>(
-            builder: (context, auth, _) {
-              return IconButton(
-                icon: Icon(
-                  auth.themeMode == ThemeMode.dark
-                      ? Icons.light_mode_outlined
-                      : Icons.dark_mode_outlined,
-                ),
-                onPressed: auth.toggleTheme,
-              );
-            },
+          IconButton(
+            icon: Icon(
+              auth.themeMode == ThemeMode.dark
+                  ? Icons.light_mode_outlined
+                  : Icons.dark_mode_outlined,
+            ),
+            onPressed: auth.toggleTheme,
           ),
+          if (auth.isAdmin)
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                switch (value) {
+                  case 'last_month':
+                    _showPasswordConfirmationDialog(
+                      context: context,
+                      title: 'Supprimer les ventes du mois dernier',
+                      content: 'Toutes les ventes datant de plus de 30 jours seront supprimées.',
+                      onConfirm: auth.deleteSalesLastMonth,
+                    );
+                    break;
+                  case 'last_year':
+                    _showPasswordConfirmationDialog(
+                      context: context,
+                      title: 'Supprimer les ventes de l\'année dernière',
+                      content: 'Toutes les ventes datant de plus de 365 jours seront supprimées.',
+                      onConfirm: auth.deleteSalesLastYear,
+                    );
+                    break;
+                  case 'all':
+                    _showPasswordConfirmationDialog(
+                      context: context,
+                      title: 'Supprimer tout l\'historique',
+                      content: 'Absolument toutes les ventes seront supprimées.',
+                      onConfirm: auth.deleteAllSales,
+                    );
+                    break;
+                }
+              },
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                const PopupMenuItem<String>(
+                  value: 'last_month',
+                  child: Text('Supprimer le mois dernier'),
+                ),
+                const PopupMenuItem<String>(
+                  value: 'last_year',
+                  child: Text('Supprimer l\'année dernière'),
+                ),
+                const PopupMenuDivider(),
+                const PopupMenuItem<String>(
+                  value: 'all',
+                  child: Text('Tout supprimer', style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            ),
         ],
       ),
     );
@@ -986,8 +1140,43 @@ class _SaleCardState extends State<_SaleCard> {
   bool _isExpanded = false;
   List<SaleItem>? _saleItems;
 
+  void _showDeleteConfirmationDialog(BuildContext context, AuthProvider auth) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmer la suppression'),
+        content: Text('Êtes-vous sûr de vouloir supprimer la vente #${widget.sale.id} ?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await auth.deleteSale(widget.sale.id!);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Vente supprimée avec succès.'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
     final date =
         '${widget.sale.date.day}/${widget.sale.date.month}/${widget.sale.date.year}';
     final time =
@@ -1006,7 +1195,6 @@ class _SaleCardState extends State<_SaleCard> {
           InkWell(
             onTap: () async {
               if (!_isExpanded && _saleItems == null) {
-                final auth = context.read<AuthProvider>();
                 _saleItems = await auth.getSaleItems(widget.sale.id!);
               }
               setState(() => _isExpanded = !_isExpanded);
@@ -1122,6 +1310,12 @@ class _SaleCardState extends State<_SaleCard> {
                     ],
                   ),
                   const SizedBox(width: 8),
+                  if (auth.isAdmin)
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      color: Theme.of(context).colorScheme.error,
+                      onPressed: () => _showDeleteConfirmationDialog(context, auth),
+                    ),
                   Icon(
                     _isExpanded ? Icons.expand_less : Icons.expand_more,
                     color: Theme.of(context)

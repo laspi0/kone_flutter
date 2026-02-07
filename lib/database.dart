@@ -658,6 +658,53 @@ class DatabaseHelper {
     return null;
   }
 
+  // --- Data Clearing Methods ---
+
+  /// Deletes a single sale and its items.
+  Future<void> deleteSale(int saleId) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('sale_items', where: 'sale_id = ?', whereArgs: [saleId]);
+      await txn.delete('sales', where: 'id = ?', whereArgs: [saleId]);
+    });
+  }
+
+  /// Deletes sales records older than the given date.
+  Future<void> deleteSalesOlderThan(String cutoffDate) async {
+    final db = await database;
+    // First, delete sale_items associated with the sales to be deleted.
+    await db.rawDelete('''
+      DELETE FROM sale_items 
+      WHERE sale_id IN (SELECT id FROM sales WHERE date < ?)
+    ''', [cutoffDate]);
+    // Then, delete the sales themselves.
+    await db.delete('sales', where: 'date < ?', whereArgs: [cutoffDate]);
+  }
+
+  /// Deletes all sales and sale items.
+  Future<void> clearSalesHistory() async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('sale_items');
+      await txn.delete('sales');
+    });
+  }
+
+  /// Deletes all customers.
+  Future<void> clearCustomers() async {
+    final db = await database;
+    await db.delete('customers');
+  }
+
+  /// Deletes all products and categories.
+  Future<void> clearProductsAndCategories() async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.delete('products');
+      await txn.delete('categories');
+    });
+  }
+
   Future close() async {
     final db = await database;
     db.close();
