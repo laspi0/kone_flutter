@@ -56,7 +56,6 @@ class DatabaseHelper {
         )
       ''');
 
-      await _insertDefaultCategories(db);
       await _insertDefaultProducts(db);
     }
 
@@ -251,7 +250,6 @@ class DatabaseHelper {
     ''');
 
     await _insertDefaultData(db);
-    await _insertDefaultCustomers(db);
     await _insertDefaultShopInfo(db);
   }
 
@@ -283,9 +281,6 @@ class DatabaseHelper {
       'role': 'superuser',
       'is_active': 1,
     });
-
-    await _insertDefaultCategories(db);
-    await _insertDefaultProducts(db);
   }
 
   Future _insertDefaultCategories(Database db) async {
