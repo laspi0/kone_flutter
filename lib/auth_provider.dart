@@ -354,15 +354,8 @@ class AuthProvider extends ChangeNotifier {
     await loadSales();
   }
 
-  Future<void> deleteSalesLastMonth() async {
-    final cutoffDate = DateTime.now().subtract(const Duration(days: 30));
-    await _db.deleteSalesOlderThan(cutoffDate.toIso8601String());
-    await loadSales();
-  }
-
-  Future<void> deleteSalesLastYear() async {
-    final cutoffDate = DateTime.now().subtract(const Duration(days: 365));
-    await _db.deleteSalesOlderThan(cutoffDate.toIso8601String());
+  Future<void> deleteSalesInDateRange(DateTime startDate, DateTime endDate) async {
+    await _db.deleteSalesInDateRange(startDate.toIso8601String(), endDate.toIso8601String());
     await loadSales();
   }
 

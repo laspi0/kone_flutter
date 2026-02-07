@@ -669,16 +669,16 @@ class DatabaseHelper {
     });
   }
 
-  /// Deletes sales records older than the given date.
-  Future<void> deleteSalesOlderThan(String cutoffDate) async {
+  /// Deletes sales records within the given date range (inclusive).
+  Future<void> deleteSalesInDateRange(String startDate, String endDate) async {
     final db = await database;
     // First, delete sale_items associated with the sales to be deleted.
     await db.rawDelete('''
       DELETE FROM sale_items 
-      WHERE sale_id IN (SELECT id FROM sales WHERE date < ?)
-    ''', [cutoffDate]);
+      WHERE sale_id IN (SELECT id FROM sales WHERE date BETWEEN ? AND ?)
+    ''', [startDate, endDate]);
     // Then, delete the sales themselves.
-    await db.delete('sales', where: 'date < ?', whereArgs: [cutoffDate]);
+    await db.delete('sales', where: 'date BETWEEN ? AND ?', whereArgs: [startDate, endDate]);
   }
 
   /// Deletes all sales and sale items.

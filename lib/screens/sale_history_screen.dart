@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../auth_provider.dart';
 import '../models.dart';
 import '../widgets/app_sidebar.dart';
@@ -130,6 +131,65 @@ class _SaleHistoryScreenState extends State<SaleHistoryScreen> {
     );
   }
 
+  // Method to show month/year picker
+  Future<void> _showMonthYearPicker() async {
+    final auth = context.read<AuthProvider>();
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      initialDatePickerMode: DatePickerMode.year,
+      helpText: 'SÉLECTIONNER UN MOIS',
+    );
+
+    if (picked != null && mounted) {
+      final startDate = DateTime(picked.year, picked.month, 1);
+      final endDate = DateTime(picked.year, picked.month + 1, 0, 23, 59, 59);
+      final monthName = DateFormat.yMMMM('fr_FR').format(picked);
+
+      _showPasswordConfirmationDialog(
+        context: context,
+        title: 'Supprimer les ventes de $monthName',
+        content: 'Toutes les ventes du mois de $monthName seront supprimées.',
+        onConfirm: () => auth.deleteSalesInDateRange(startDate, endDate),
+      );
+    }
+  }
+
+  // Method to show year picker
+  Future<void> _showYearPicker() async {
+    final auth = context.read<AuthProvider>();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Sélectionner une année'),
+          content: SizedBox(
+            width: 300,
+            height: 300,
+            child: YearPicker(
+              firstDate: DateTime(2020),
+              lastDate: DateTime.now(),
+              selectedDate: DateTime.now(),
+              onChanged: (DateTime dateTime) {
+                final startDate = DateTime(dateTime.year, 1, 1);
+                final endDate = DateTime(dateTime.year, 12, 31, 23, 59, 59);
+                Navigator.of(context).pop();
+                _showPasswordConfirmationDialog(
+                  context: context,
+                  title: 'Supprimer les ventes de ${dateTime.year}',
+                  content: 'Toutes les ventes de l\'année ${dateTime.year} seront supprimées.',
+                  onConfirm: () => auth.deleteSalesInDateRange(startDate, endDate),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -204,21 +264,11 @@ class _SaleHistoryScreenState extends State<SaleHistoryScreen> {
             PopupMenuButton<String>(
               onSelected: (value) {
                 switch (value) {
-                  case 'last_month':
-                    _showPasswordConfirmationDialog(
-                      context: context,
-                      title: 'Supprimer les ventes du mois dernier',
-                      content: 'Toutes les ventes datant de plus de 30 jours seront supprimées.',
-                      onConfirm: auth.deleteSalesLastMonth,
-                    );
+                  case 'by_month':
+                    _showMonthYearPicker();
                     break;
-                  case 'last_year':
-                    _showPasswordConfirmationDialog(
-                      context: context,
-                      title: 'Supprimer les ventes de l\'année dernière',
-                      content: 'Toutes les ventes datant de plus de 365 jours seront supprimées.',
-                      onConfirm: auth.deleteSalesLastYear,
-                    );
+                  case 'by_year':
+                    _showYearPicker();
                     break;
                   case 'all':
                     _showPasswordConfirmationDialog(
@@ -232,12 +282,12 @@ class _SaleHistoryScreenState extends State<SaleHistoryScreen> {
               },
               itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
                 const PopupMenuItem<String>(
-                  value: 'last_month',
-                  child: Text('Supprimer le mois dernier'),
+                  value: 'by_month',
+                  child: Text('Supprimer par mois...'),
                 ),
                 const PopupMenuItem<String>(
-                  value: 'last_year',
-                  child: Text('Supprimer l\'année dernière'),
+                  value: 'by_year',
+                  child: Text('Supprimer par année...'),
                 ),
                 const PopupMenuDivider(),
                 const PopupMenuItem<String>(
