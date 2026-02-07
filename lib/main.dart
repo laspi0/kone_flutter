@@ -29,7 +29,7 @@ class ShopManagerApp extends StatelessWidget {
             debugShowCheckedModeBanner: false,
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(
-                seedColor: const Color(0xFF6366F1), // Indigo moderne
+                seedColor: const Color(0xFF6366F1),
                 brightness: Brightness.light,
               ),
               useMaterial3: true,
