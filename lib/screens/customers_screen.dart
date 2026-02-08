@@ -4,6 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../auth_provider.dart';
 import '../models.dart';
 import '../widgets/app_sidebar.dart';
+import '../widgets/empty_state.dart';
+
+part 'customers/customers_dialogs.dart';
+part 'customers/customers_widgets.dart';
 
 class CustomersScreen extends StatefulWidget {
   const CustomersScreen({super.key});
@@ -146,17 +150,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
     return Consumer<AuthProvider>(
       builder: (context, auth, _) {
         if (auth.customers.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(64),
-              child: Column(
-                children: [
-                  Icon(Icons.people_outline, size: 64, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2)),
-                  const SizedBox(height: 16),
-                  Text('Aucun client', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
-                ],
-              ),
-            ),
+          return const EmptyState(
+            icon: Icons.people_outline,
+            title: 'Aucun client',
           );
         }
 
@@ -167,11 +163,9 @@ class _CustomersScreenState extends State<CustomersScreen> {
         }).toList();
 
         if (filteredCustomers.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(64),
-              child: Text('Aucun résultat', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
-            ),
+          return const EmptyState(
+            icon: Icons.search_off,
+            title: 'Aucun résultat',
           );
         }
 
@@ -217,190 +211,5 @@ class _CustomersScreenState extends State<CustomersScreen> {
         ],
       ),
     );
-  }
-}
-
-class _CustomerCard extends StatelessWidget {
-  final Customer customer;
-  final VoidCallback? onTap;
-  final VoidCallback? onDelete;
-
-  const _CustomerCard({required this.customer, this.onTap, this.onDelete});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05)),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(Icons.person_outline, color: Theme.of(context).colorScheme.primary, size: 28),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      customer.name,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 6),
-                    if (customer.phone != null)
-                      Row(
-                        children: [
-                          Icon(Icons.phone_outlined, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
-                          const SizedBox(width: 6),
-                          Text(
-                            customer.phone!,
-                            style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
-                          ),
-                        ],
-                      ),
-                    if (customer.email != null) ...[
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Icon(Icons.email_outlined, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
-                          const SizedBox(width: 6),
-                          Text(
-                            customer.email!,
-                            style: TextStyle(fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              if (onDelete != null)
-                IconButton(
-                  onPressed: onDelete,
-                  icon: Icon(Icons.delete_outline, size: 20, color: Theme.of(context).colorScheme.error),
-                  style: IconButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.errorContainer.withOpacity(0.3),
-                    padding: const EdgeInsets.all(8),
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CustomerDialog extends StatefulWidget {
-  final Customer? customer;
-  const _CustomerDialog({this.customer});
-
-  @override
-  State<_CustomerDialog> createState() => _CustomerDialogState();
-}
-
-class _CustomerDialogState extends State<_CustomerDialog> {
-  final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
-  late TextEditingController _phoneController;
-  late TextEditingController _emailController;
-  late TextEditingController _addressController;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: widget.customer?.name ?? '');
-    _phoneController = TextEditingController(text: widget.customer?.phone ?? '');
-    _emailController = TextEditingController(text: widget.customer?.email ?? '');
-    _addressController = TextEditingController(text: widget.customer?.address ?? '');
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
-    _emailController.dispose();
-    _addressController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.customer == null ? 'Nouveau client' : 'Modifier le client'),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Nom complet *', border: OutlineInputBorder()),
-                validator: (v) => v!.isEmpty ? 'Requis' : null,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(labelText: 'Téléphone', border: OutlineInputBorder()),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _addressController,
-                decoration: const InputDecoration(labelText: 'Adresse', border: OutlineInputBorder()),
-                maxLines: 2,
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
-        FilledButton(onPressed: _save, child: const Text('Enregistrer')),
-      ],
-    );
-  }
-
-  void _save() {
-    if (!_formKey.currentState!.validate()) return;
-
-    final customer = Customer(
-      id: widget.customer?.id,
-      name: _nameController.text,
-      phone: _phoneController.text.isEmpty ? null : _phoneController.text,
-      email: _emailController.text.isEmpty ? null : _emailController.text,
-      address: _addressController.text.isEmpty ? null : _addressController.text,
-    );
-
-    final auth = context.read<AuthProvider>();
-    if (widget.customer == null) {
-      auth.addCustomer(customer);
-    } else {
-      auth.updateCustomer(customer);
-    }
-
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(widget.customer == null ? 'Client ajouté' : 'Client modifié')));
   }
 }

@@ -1,115 +1,139 @@
-# shop_manager
-
 # Shop Manager
+
+Application de gestion de boutique avec authentification multi-roles, point de vente, gestion produits, categories, clients et historique des ventes.
 
 ## 🎯 Objectif
 
-Application de gestion de boutique avec authentification multi-rôles, gestion produits, ventes, clients et outils d'administration.
+Permettre a une boutique de gerer ses ventes quotidiennes avec un POS simple, des roles clairs (superuser/admin/caissier), et des exports Excel/Facture PDF.
 
-## ✅ Fonctionnalités implémentées
+## ✅ Fonctionnalites implementees
 
 ### 1. Authentification
 
-- ✅ Écran de login avec design moderne
-- ✅ Validation des champs
-- ✅ Gestion des erreurs
-- ✅ Indicateur de chargement
-- ✅ Basculement visibilité mot de passe
+- Ecran de login avec design moderne
+- Validation des champs
+- Gestion des erreurs
+- Indicateur de chargement
+- Basculement visibilité mot de passe
 
-### 2. Gestion des rôles
+### 2. Gestion des roles
 
-- ✅ **Superuser** : Gestion des comptes utilisateurs
-- ✅ **Admin** : Gestion produits, catégories, clients
-- ✅ **Caissier** : Point de vente et historique
-- ✅ Badge de rôle sur l'écran d'accueil
+- **Superuser** : Gestion des comptes utilisateurs
+- **Admin** : Gestion produits, categories, clients
+- **Caissier** : Point de vente et historique
+- Badge de role sur l'ecran d'accueil
 
 ### 3. Interface
 
-- ✅ Écran d'accueil personnalisé
-- ✅ Menu drawer avec informations utilisateur
-- ✅ Thème clair/sombre
-- ✅ Design Material 3
+- Ecran d'accueil personnalise
+- Menu drawer avec informations utilisateur
+- Theme clair/sombre
+- Design Material 3
 
-### 4. Sécurité (Basique)
+### 4. Securite
 
-- ✅ Authentification SQLite
-- ✅ Comptes de test
-- ⚠️ Note : Mot de passe en clair (à améliorer en production avec bcrypt)
+- Authentification SQLite
+- Comptes de test
 
 ### 5. Produits (Admin)
 
-- ✅ CRUD produits + catégories
-- ✅ Import Excel (.xlsx) avec validation
-- ✅ Export modèle Excel
+- CRUD produits + categories
+- Import Excel (.xlsx) avec validation ligne par ligne
+- Export Excel + modele
 
-## 📁 Structure du projet
+### 6. Ventes
+
+- Point de vente avec scan code-barres
+- Encaissement avec montant recu + monnaie rendue
+- Facture PDF (impression/enregistrement)
+
+### 7. Clients
+
+- CRUD clients
+- Selection client lors de la vente
+
+### 8. Historique
+
+- Filtrage par dates, caissier, client
+- Export Excel des ventes
+
+## 📁 Structure du projet (mise a jour)
 
 ```
+assets/
+└── fonts/
+    ├── ArialUnicode.ttf
+    └── ArialBold.ttf
+
 lib/
-├── main.dart                      # Point d'entrée
-├── models.dart                    # Modèles
-├── database.dart                  # SQLite helper
-├── auth_provider.dart             # State management (Provider)
-├── app_router.dart                # Navigation (GoRouter)
+├── main.dart
+├── app_router.dart
+├── models.dart
+├── database.dart
+├── auth_provider.dart
+├── providers/
+│   ├── product_provider.dart
+│   └── category_provider.dart
+├── data/repositories/
+│   ├── product_repository.dart
+│   └── category_repository.dart
+├── services/
+│   └── pdf_service.dart
+├── utils/
+│   └── import_utils.dart
 ├── widgets/
-│   └── app_sidebar.dart           # Sidebar
+│   ├── app_sidebar.dart
+│   ├── access_denied.dart
+│   └── empty_state.dart
 └── screens/
-    ├── login_screen.dart          # Écran de connexion
-    ├── home_screen.dart           # Écran d'accueil
-    ├── products_screen.dart       # Produits + import Excel
-    ├── categories_screen.dart     # Catégories
-    ├── sales_screen.dart          # Ventes
-    ├── sale_history_screen.dart   # Historique des ventes
-    ├── customers_screen.dart      # Clients
-    ├── settings_screen.dart       # Paramètres
-    └── user_management_screen.dart# Gestion utilisateurs
+    ├── login_screen.dart
+    ├── home_screen.dart
+    ├── products_screen.dart
+    ├── categories_screen.dart
+    ├── sales_screen.dart
+    ├── sale_history_screen.dart
+    ├── customers_screen.dart
+    ├── settings_screen.dart
+    ├── user_management_screen.dart
+    ├── login/
+    │   └── login_widgets.dart
+    ├── home/
+    │   └── home_widgets.dart
+    ├── products/
+    │   ├── products_widgets.dart
+    │   └── products_dialogs.dart
+    ├── categories/
+    │   ├── categories_widgets.dart
+    │   └── categories_dialogs.dart
+    ├── sales/
+    │   ├── sales_widgets.dart
+    │   └── sales_dialogs.dart
+    ├── sale_history/
+    │   └── sale_history_widgets.dart
+    ├── customers/
+    │   ├── customers_widgets.dart
+    │   └── customers_dialogs.dart
+    ├── settings/
+    │   ├── settings_widgets.dart
+    │   └── settings_dialogs.dart
+    └── user_management/
+        ├── user_management_widgets.dart
+        └── user_management_dialogs.dart
 ```
-
-**Note** : La structure peut évoluer avec les fonctionnalités.
 
 ## 🚀 Installation
-
-### 1. Créer le projet
-
-```bash
-flutter create shop_manager
-cd shop_manager
-```
-
-### 2. Structure des dossiers
-
-```bash
-mkdir -p lib/screens
-```
-
-### 3. Copier les fichiers
-
-Remplacez `pubspec.yaml` puis copiez dans `lib/` :
-
-- `main.dart`
-- `models.dart`
-- `database.dart`
-- `auth_provider.dart`
-- `app_router.dart`
-
-Dans `lib/screens/` :
-
-- `login_screen.dart`
-- `home_screen.dart`
-
-### 4. Installer les dépendances
 
 ```bash
 flutter pub get
 ```
 
-### 5. Lancer l'application
+### Lancer l'application
 
 ```bash
 # Desktop
+flutter run -d macos
 flutter run -d windows
 flutter run -d linux
-flutter run -d macos
 
 # Mobile
 flutter run -d android
@@ -118,125 +142,84 @@ flutter run -d ios
 
 ## 🔐 Comptes de test
 
+| Role      | Username  | Password     |
+|-----------|-----------|--------------|
+| Superuser | superuser | superuser123 |
+| Admin     | admin     | admin123     |
+| Caissier  | caissier  | caissier123  |
 
-| Rôle      | Username  | Password      |
-| --------- | --------- | ------------- |
-| Superuser | superuser | superuser123  |
-| Admin     | admin     | admin123      |
-| Caissier  | caissier  | caissier123   |
-| Caissier  | marie     | marie123      |
+## 🎨 Fonctionnalites UI (mise a jour)
 
-## 🎨 Fonctionnalités UI
+### Ecran de connexion
 
-### Écran de connexion
-
-- Gradient de fond
-- Card avec formulaire centré
-- Champs username et password avec validation
-- Toggle visibilité mot de passe
-- Affichage des erreurs en temps réel
+- Card avec formulaire centre
+- Champs username/password avec validation
+- Toggle visibilite mot de passe
+- Affichage des erreurs
 - Loading indicator
-- Liste des comptes de test
 
-### Écran d'accueil
+### Ecran d'accueil
 
-- Avatar avec icône selon le rôle
-- Message de bienvenue personnalisé
-- Badge de rôle (Superuser/Admin/Caissier)
-- Liste des permissions
-- Bouton de déconnexion
-- Drawer avec navigation
-- Toggle thème clair/sombre
+- Message de bienvenue personnalise
+- Badge de role (Superuser/Admin/Caissier)
+- Statistiques (ventes, CA, produits, stock bas)
+- Dernieres ventes
+- Drawer navigation
 
 ### Produits (Admin)
 
-- Import Excel (.xlsx) tolérant aux variations d’en-têtes
-- Parsing nombre tolérant (`12 000`, `12,5`)
-- Rapport d’erreurs et avertissements “nom proche”
+- Import Excel (.xlsx) avec validation stricte
+- Parsing nombre tolerant (`12 000`, `12,5`)
+- Rapport erreurs/avertissements ligne par ligne
+- Export/Modele Excel
+
+## Import/Export Excel (Produits)
+
+Colonnes attendues:
+- Nom
+- Description
+- Prix
+- Stock
+- Categorie
+- Code-barres
+
+Validation:
+- Prix > 0
+- Stock >= 0
+- Nom et categorie obligatoires
+- Rapport d'erreurs/avertissements ligne par ligne
+
+## PDF Facture
+
+- Montant recu et monnaie rendue inclus
+- Polices Unicode chargees depuis `assets/fonts/`
+
+Note: les polices actuelles (ArialUnicode/ArialBold) proviennent du systeme macOS.  
+Pour distribution, remplacez-les par des polices libres (ex: Noto Sans) et mettez a jour `assets/fonts/`.
 
 ## 🧪 Tester l'application
 
-1. **Lancer l'app** → Écran de login s'affiche
-2. **Se connecter** avec `superuser` / `superuser123`
-3. **Ouvrir** `Paramètres` → `Gestion des utilisateurs`
-4. **Créer/éditer** un compte Admin ou Caissier
-5. **Se connecter** avec `admin` / `admin123`
-6. **Tester** import Excel sur la page Produits
-
-## 🔄 Prochaines étapes
-
-### Idées futures
-
-- Historique détaillé des actions Superuser
-- Export CSV/XLSX des produits
-- Rôles/permissions personnalisés
+1. Lancer l'app
+2. Se connecter avec `superuser` / `superuser123`
+3. Ouvrir Parametres -> Gestion des utilisateurs
+4. Creer/editer un compte Admin ou Caissier
+5. Se connecter avec `admin` / `admin123`
+6. Tester import Excel sur la page Produits
 
 ## 📝 Notes techniques
 
 ### Provider
 
-- `AuthProvider` gère l'état d'authentification
-- `notifyListeners()` met à jour l'UI automatiquement
-- `Consumer` écoute les changements
+- `AuthProvider` : auth, ventes, clients, utilisateurs, settings
+- `ProductProvider` et `CategoryProvider` : data produits/categories
 
 ### GoRouter
 
-- Navigation déclarative
-- Routes définies dans `app_router.dart`
-- `context.go()` pour naviguer
+- Navigation declarative
+- Routes definies dans `app_router.dart`
 
 ### SQLite
 
-- Base de données locale
-- Initialisée automatiquement au premier lancement
-- Données persistantes
-
-### Sécurité
-
-⚠️ **Important** : Les mots de passe sont stockés en clair pour la démo.
-En production, utilisez `bcrypt`, `argon2` ou similaire.
-
-## 🐛 Dépannage
-
-### Erreur SQLite sur desktop
-
-```bash
-flutter pub add sqflite_common_ffi
-```
-
-### Hot reload ne fonctionne pas
-
-Redémarrez l'app avec `R` dans le terminal.
-
-### Base de données corrompue
-
-Supprimez la BDD et relancez :
-
-- Windows : `%USERPROFILE%\Documents\shop_manager.db`
-- Linux/Mac : `~/Documents/shop_manager.db`
-
-## ✨ Prêt pour l'étape 2 ?
-
-Une fois cette étape validée, nous passerons au **Dashboard** avec :
-
-- Statistiques en temps réel
-- Cartes interactives
-- Actions rapides
-- Navigation vers les modules
-
-**Testez bien cette étape avant de continuer !** 🚀
-
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- Base de donnees locale
+- Initialisee automatiquement au premier lancement
+- Donnees persistantes

@@ -4,6 +4,12 @@ import 'package:go_router/go_router.dart';
 import '../auth_provider.dart';
 import '../models.dart';
 import '../widgets/app_sidebar.dart'; // New import
+import '../widgets/empty_state.dart';
+import '../providers/category_provider.dart';
+import '../providers/product_provider.dart';
+
+part 'categories/categories_dialogs.dart';
+part 'categories/categories_widgets.dart';
 
 class CategoriesScreen extends StatelessWidget {
   const CategoriesScreen({super.key});
@@ -86,8 +92,8 @@ class CategoriesScreen extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Consumer<AuthProvider>(
-      builder: (context, auth, _) {
+    return Consumer2<CategoryProvider, ProductProvider>(
+      builder: (context, categoryProvider, productProvider, _) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -100,7 +106,7 @@ class CategoriesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '${auth.categories.length} catégorie${auth.categories.length > 1 ? 's' : ''} • ${auth.products.length} produit${auth.products.length > 1 ? 's' : ''}',
+              '${categoryProvider.categories.length} catégorie${categoryProvider.categories.length > 1 ? 's' : ''} • ${productProvider.products.length} produit${productProvider.products.length > 1 ? 's' : ''}',
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Theme.of(context).colorScheme.onSurface.withAlpha(128),
               ),
@@ -112,20 +118,12 @@ class CategoriesScreen extends StatelessWidget {
   }
 
   Widget _buildCategoriesList(BuildContext context, bool isDesktop) {
-    return Consumer<AuthProvider>(
-      builder: (context, auth, _) {
-        if (auth.categories.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(64),
-              child: Column(
-                children: [
-                  Icon(Icons.category_outlined, size: 64, color: Theme.of(context).colorScheme.onSurface.withAlpha(51)),
-                  const SizedBox(height: 16),
-                  Text('Aucune catégorie', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withAlpha(128))),
-                ],
-              ),
-            ),
+    return Consumer3<AuthProvider, CategoryProvider, ProductProvider>(
+      builder: (context, auth, categoryProvider, productProvider, _) {
+        if (categoryProvider.categories.isEmpty) {
+          return const EmptyState(
+            icon: Icons.category_outlined,
+            title: 'Aucune catégorie',
           );
         }
 
@@ -138,10 +136,12 @@ class CategoriesScreen extends StatelessWidget {
             mainAxisSpacing: 16,
             childAspectRatio: 1.3,
           ),
-          itemCount: auth.categories.length,
+          itemCount: categoryProvider.categories.length,
           itemBuilder: (context, index) {
-            final category = auth.categories[index];
-            final productCount = auth.products.where((p) => p.categoryId == category.id).length;
+            final category = categoryProvider.categories[index];
+            final productCount = productProvider.products
+                .where((p) => p.categoryId == category.id)
+                .length;
             return _CategoryCard(
               category: category,
               productCount: productCount,
@@ -168,7 +168,7 @@ class CategoriesScreen extends StatelessWidget {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
           FilledButton(
             onPressed: () {
-              context.read<AuthProvider>().deleteCategory(category.id!);
+              context.read<CategoryProvider>().deleteCategory(category.id!);
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Catégorie supprimée')));
             },
@@ -178,162 +178,5 @@ class CategoriesScreen extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-
-
-class _CategoryCard extends StatelessWidget {
-  final Category category;
-  final int productCount;
-  final VoidCallback? onTap;
-  final VoidCallback? onDelete;
-
-  const _CategoryCard({required this.category, required this.productCount, this.onTap, this.onDelete});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Theme.of(context).colorScheme.onSurface.withAlpha(13)),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withAlpha(38),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(Icons.category, size: 24, color: Theme.of(context).colorScheme.primary),
-                  ),
-                  if (onDelete != null)
-                    IconButton(
-                      onPressed: onDelete,
-                      icon: Icon(Icons.delete_outline, size: 18, color: Theme.of(context).colorScheme.error),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.errorContainer.withAlpha(77),
-                        padding: const EdgeInsets.all(6),
-                      ),
-                    ),
-                ],
-              ),
-              const Spacer(),
-              Text(
-                category.name,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '$productCount produit${productCount > 1 ? 's' : ''}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CategoryDialog extends StatefulWidget {
-  final Category? category;
-  const _CategoryDialog({this.category});
-
-  @override
-  State<_CategoryDialog> createState() => _CategoryDialogState();
-}
-
-class _CategoryDialogState extends State<_CategoryDialog> {
-  final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
-  late TextEditingController _descriptionController;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(text: widget.category?.name ?? '');
-    _descriptionController = TextEditingController(text: widget.category?.description ?? '');
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.category == null ? 'Nouvelle catégorie' : 'Modifier la catégorie'),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Nom de la catégorie', border: OutlineInputBorder()),
-              validator: (v) => v!.isEmpty ? 'Requis' : null,
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(labelText: 'Description (optionnelle)', border: OutlineInputBorder()),
-              maxLines: 2,
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
-        FilledButton(onPressed: _save, child: const Text('Enregistrer')),
-      ],
-    );
-  }
-
-  void _save() {
-    if (!_formKey.currentState!.validate()) return;
-
-    final category = Category(
-      id: widget.category?.id,
-      name: _nameController.text,
-      description: _descriptionController.text.isEmpty ? null : _descriptionController.text,
-    );
-
-    final auth = context.read<AuthProvider>();
-    if (widget.category == null) {
-      auth.addCategory(category);
-    } else {
-      auth.updateCategory(category);
-    }
-
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(widget.category == null ? 'Catégorie ajoutée' : 'Catégorie modifiée')));
   }
 }

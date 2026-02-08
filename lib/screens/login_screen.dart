@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../auth_provider.dart';
 
+part 'login/login_widgets.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -56,51 +58,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Logo avec couleur vive
-                  Center(
-                    child: Container(
-                      width: 72,
-                      height: 72,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Theme.of(context).colorScheme.primary.withAlpha(77),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.shopping_bag_outlined,
-                        size: 36,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
+                  const _LoginLogo(),
                   const SizedBox(height: 32),
                   
                   // Titre épuré
-                  Center(
-                    child: Column(
-                      children: [
-                        Text(
-                          'Shop Manager',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Connectez-vous à votre espace',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withAlpha(128),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  const _LoginHeader(),
                   const SizedBox(height: 48),
                   
                   // Username
@@ -217,35 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Consumer<AuthProvider>(
                     builder: (context, authProvider, _) {
                       if (authProvider.errorMessage != null) {
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 16),
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.errorContainer.withAlpha(128),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.info_outline,
-                                  size: 18,
-                                  color: Theme.of(context).colorScheme.error,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Text(
-                                    authProvider.errorMessage!,
-                                    style: TextStyle(
-                                      color: Theme.of(context).colorScheme.error,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
+                        return _LoginError(message: authProvider.errorMessage!);
                       }
                       return const SizedBox(height: 16);
                     },
@@ -255,35 +189,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   // Login button
                   Consumer<AuthProvider>(
                     builder: (context, authProvider, _) {
-                      return SizedBox(
-                        width: double.infinity,
-                        height: 52,
-                        child: FilledButton(
-                          onPressed: authProvider.isLoading ? null : _handleLogin,
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.onSurface,
-                            foregroundColor: Theme.of(context).colorScheme.surface,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: authProvider.isLoading
-                              ? SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text(
-                                  'Se connecter',
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                        ),
+                      return _LoginButton(
+                        isLoading: authProvider.isLoading,
+                        onPressed: _handleLogin,
                       );
                     },
                   ),

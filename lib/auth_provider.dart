@@ -8,8 +8,6 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
 
-  List<Product> _products = [];
-  List<Category> _categories = [];
   List<Sale> _sales = [];
   List<CartItem> _cart = [];
   List<Customer> _customers = [];
@@ -24,8 +22,6 @@ class AuthProvider extends ChangeNotifier {
   ThemeMode get themeMode => _themeMode;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  List<Product> get products => _products;
-  List<Category> get categories => _categories;
   List<Sale> get sales => _sales;
   List<CartItem> get cart => _cart;
   List<Customer> get customers => _customers;
@@ -77,8 +73,6 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _loadData() async {
     await loadUsers();
-    await loadCategories();
-    await loadProducts();
     await loadSales();
     await loadCustomers();
     await loadShopInfo();
@@ -87,8 +81,6 @@ class AuthProvider extends ChangeNotifier {
   void logout() {
     _currentUser = null;
     _errorMessage = null;
-    _products = [];
-    _categories = [];
     _sales = [];
     _cart = [];
     _customers = [];
@@ -173,57 +165,6 @@ class AuthProvider extends ChangeNotifier {
     return true;
   }
 
-  // Categories
-  Future<void> loadCategories() async {
-    _categories = await _db.getCategories();
-    notifyListeners();
-  }
-
-  Future<void> addCategory(Category category) async {
-    await _db.insertCategory(category);
-    await loadCategories();
-  }
-
-  Future<void> updateCategory(Category category) async {
-    await _db.updateCategory(category);
-    await loadCategories();
-  }
-
-  Future<void> deleteCategory(int id) async {
-    await _db.deleteCategory(id);
-    await loadCategories();
-    await loadProducts();
-  }
-
-  // Products
-  Future<void> loadProducts() async {
-    _products = await _db.getProducts();
-    notifyListeners();
-  }
-
-  Future<void> addProduct(Product product) async {
-    await _db.insertProduct(product);
-    await loadProducts();
-  }
-
-  Future<void> updateProduct(Product product) async {
-    await _db.updateProduct(product);
-    await loadProducts();
-  }
-
-  Future<void> deleteProduct(int id) async {
-    await _db.deleteProduct(id);
-    await loadProducts();
-  }
-
-  String getCategoryName(int categoryId) {
-    final category = _categories.firstWhere(
-      (c) => c.id == categoryId,
-      orElse: () => Category(name: 'Inconnu'),
-    );
-    return category.name;
-  }
-
   // Cart operations
   void addToCart(Product product) {
     final existingIndex = _cart.indexWhere(
@@ -300,7 +241,6 @@ class AuthProvider extends ChangeNotifier {
 
       _selectedCustomer = null; // Reset client
       clearCart();
-      await loadProducts();
       await loadSales();
 
       Customer? actualCustomer = customer.id == 0 ? null : await _db.getCustomerById(customer.id!);
@@ -380,7 +320,5 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> clearProductsAndCategories() async {
     await _db.clearProductsAndCategories();
-    await loadProducts();
-    await loadCategories();
   }
 }
