@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 import '../models.dart';
 
 class PdfService {
@@ -13,7 +14,8 @@ class PdfService {
     ShopInfo shopInfo,
     String cashierName,
   ) async {
-    final pdf = pw.Document();
+    final theme = await _loadPdfTheme();
+    final pdf = pw.Document(theme: theme);
 
     final formatCurrency = NumberFormat.currency(
       locale: 'fr_FR',
@@ -45,6 +47,10 @@ class PdfService {
           marginAll: 2 * PdfPageFormat.mm,
         ),
         build: (pw.Context context) {
+          final amountPaid = sale.amountPaid;
+          final change = sale.change ??
+              (amountPaid != null ? amountPaid - sale.total : 0);
+
           return [
             pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -264,7 +270,7 @@ class PdfService {
                 ),
 
                 // Montant reçu et rendu (si applicable)
-                if (sale.amountPaid != null && sale.amountPaid! > 0) ...[
+                if (amountPaid != null && amountPaid > 0) ...[
                   pw.SizedBox(height: 3),
                   pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.end,
@@ -274,7 +280,7 @@ class PdfService {
                         style: const pw.TextStyle(fontSize: 9),
                       ),
                       pw.Text(
-                        '${formatCurrency.format(sale.amountPaid!)} FCFA',
+                        '${formatCurrency.format(amountPaid)} FCFA',
                         style: const pw.TextStyle(fontSize: 9),
                       ),
                     ],
@@ -288,7 +294,7 @@ class PdfService {
                         style: const pw.TextStyle(fontSize: 9),
                       ),
                       pw.Text(
-                        '${formatCurrency.format(sale.amountPaid! - sale.total)} FCFA',
+                        '${formatCurrency.format(change < 0 ? 0 : change)} FCFA',
                         style: const pw.TextStyle(fontSize: 9),
                       ),
                     ],
@@ -363,5 +369,63 @@ class PdfService {
         ),
       ),
     );
+  }
+
+  Future<pw.ThemeData?> _loadPdfTheme() async {
+    final baseFont = await _loadFont(
+      assetPath: 'assets/fonts/ArialUnicode.ttf',
+      fallbackPaths: const [
+        '/System/Library/Fonts/Supplemental/Arial Unicode.ttf',
+        '/System/Library/Fonts/Supplemental/Arial.ttf',
+      ],
+    );
+    if (baseFont == null) return null;
+
+    final boldFont = await _loadFont(
+      assetPath: 'assets/fonts/ArialBold.ttf',
+      fallbackPaths: const [
+        '/System/Library/Fonts/Supplemental/Arial Bold.ttf',
+      ],
+    );
+
+    return pw.ThemeData.withFont(
+      base: baseFont,
+      bold: boldFont ?? baseFont,
+    );
+  }
+
+  Future<pw.Font?> _loadFont({
+    required String assetPath,
+    required List<String> fallbackPaths,
+  }) async {
+    final assetFont = await _loadFontFromAsset(assetPath);
+    if (assetFont != null) return assetFont;
+
+    for (final path in fallbackPaths) {
+      final fileFont = await _loadFontFromFile(path);
+      if (fileFont != null) return fileFont;
+    }
+
+    return null;
+  }
+
+  Future<pw.Font?> _loadFontFromAsset(String path) async {
+    try {
+      final data = await rootBundle.load(path);
+      return pw.Font.ttf(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<pw.Font?> _loadFontFromFile(String path) async {
+    try {
+      final file = File(path);
+      if (await file.exists()) {
+        final bytes = await file.readAsBytes();
+        return pw.Font.ttf(bytes.buffer.asByteData());
+      }
+    } catch (_) {}
+    return null;
   }
 }

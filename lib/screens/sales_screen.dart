@@ -1,6 +1,7 @@
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:shop_manager/database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:printing/printing.dart';
@@ -819,58 +820,10 @@ class _SalesScreenState extends State<SalesScreen> {
   }
 
   void _completeSale(BuildContext context, AuthProvider auth) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(
-              Icons.check_circle_outline,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(width: 12),
-            const Text('Confirmer la vente'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${auth.cartItemCount} article${auth.cartItemCount > 1 ? 's' : ''}',
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Total: ${auth.cartTotal.toStringAsFixed(0)} FCFA',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-            ),
-            const SizedBox(height: 16),
-            const Text('Confirmer cette vente ?'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Annuler'),
-          ),
-          FilledButton.icon(
-            onPressed: () => Navigator.pop(context, true),
-            icon: const Icon(Icons.check),
-            label: const Text('Confirmer'),
-          ),
-        ],
-      ),
-    );
+    final amountPaid = await _showPaymentDialog(context, auth);
+    if (amountPaid == null) return;
 
-    if (confirmed != true) {
-      return;
-    }
-
-    final result = await auth.completeSale();
+    final result = await auth.completeSale(amountPaid: amountPaid);
 
     if (!mounted) return;
 
@@ -995,6 +948,21 @@ class _SalesScreenState extends State<SalesScreen> {
     }
   }
 
+  Future<double?> _showPaymentDialog(
+    BuildContext context,
+    AuthProvider auth,
+  ) async {
+    final result = await showDialog<double>(
+      context: context,
+      builder: (context) => _PaymentDialog(
+        total: auth.cartTotal,
+        itemCount: auth.cartItemCount,
+      ),
+    );
+    return result;
+  }
+
+
   void _showCustomerSelector(BuildContext context, AuthProvider auth) {
     showModalBottomSheet(
       context: context,
@@ -1062,6 +1030,124 @@ class _SalesScreenState extends State<SalesScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PaymentDialog extends StatefulWidget {
+  final double total;
+  final int itemCount;
+
+  const _PaymentDialog({
+    required this.total,
+    required this.itemCount,
+  });
+
+  @override
+  State<_PaymentDialog> createState() => _PaymentDialogState();
+}
+
+class _PaymentDialogState extends State<_PaymentDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: widget.total.toStringAsFixed(0),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  double? _parseAmount(String value) {
+    final cleaned = value.replaceAll(RegExp(r'[^0-9]'), '');
+    if (cleaned.isEmpty) return null;
+    return double.tryParse(cleaned);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final amountPaid = _parseAmount(_controller.text);
+    final change = amountPaid != null ? amountPaid - widget.total : 0;
+    final isValid = amountPaid != null && amountPaid >= widget.total;
+    final errorText = amountPaid == null
+        ? 'Entrez un montant'
+        : amountPaid < widget.total
+            ? 'Montant insuffisant'
+            : null;
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      title: Row(
+        children: [
+          Icon(
+            Icons.payments_outlined,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(width: 12),
+          const Text('Paiement'),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${widget.itemCount} article${widget.itemCount > 1 ? 's' : ''}',
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Total: ${widget.total.toStringAsFixed(0)} FCFA',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _controller,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecoration(
+              labelText: 'Montant reçu',
+              suffixText: 'FCFA',
+              errorText: errorText,
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Monnaie à rendre:'),
+              Text(
+                '${change > 0 ? change.toStringAsFixed(0) : '0'} FCFA',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+            ],
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Annuler'),
+        ),
+        FilledButton.icon(
+          onPressed: isValid ? () => Navigator.pop(context, amountPaid) : null,
+          icon: const Icon(Icons.check),
+          label: const Text('Encaisser'),
+        ),
+      ],
     );
   }
 }

@@ -188,8 +188,17 @@ class _ProductsScreenState extends State<ProductsScreen> {
                       width: double.infinity,
                       child: OutlinedButton.icon(
                         onPressed: () => _generateExcelTemplate(context),
-                        icon: const Icon(Icons.download),
+                        icon: const Icon(Icons.description),
                         label: const Text('Générer modèle Excel'),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _exportProductsToExcel(context),
+                        icon: const Icon(Icons.download),
+                        label: const Text('Exporter vers Excel'),
                       ),
                     ),
                   ],
@@ -259,7 +268,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Annuler')),
           FilledButton(
             onPressed: () {
-              context.read<AuthProvider>().deleteProduct(product.id!);
+              context.read<AuthProvider>().deleteProduct(product.id!); 
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Produit supprimé')));
             },
@@ -269,6 +278,89 @@ class _ProductsScreenState extends State<ProductsScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _exportProductsToExcel(BuildContext context) async {
+    final auth = context.read<AuthProvider>();
+    final products = auth.products;
+
+    final excel = exc.Excel.createExcel();
+    final exc.Sheet sheet = excel['Products'];
+    excel.setDefaultSheet('Products');
+    if (excel.tables.containsKey('Sheet1')) {
+      excel.delete('Sheet1');
+    }
+
+    final headers = [
+      'ID',
+      'Nom',
+      'Description',
+      'Prix',
+      'Stock',
+      'Catégorie',
+      'Code-barres'
+    ];
+
+    for (var i = 0; i < headers.length; i++) {
+      sheet.cell(exc.CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
+          .value = exc.TextCellValue(headers[i]);
+    }
+
+    for (var i = 0; i < products.length; i++) {
+      final product = products[i];
+      final categoryName = auth.getCategoryName(product.categoryId);
+      final rowIndex = i + 1;
+
+      sheet.cell(exc.CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: rowIndex))
+          .value = exc.IntCellValue(product.id ?? -1);
+      sheet.cell(exc.CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: rowIndex))
+          .value = exc.TextCellValue(product.name);
+      sheet.cell(exc.CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex))
+          .value = exc.TextCellValue(product.description ?? '');
+      sheet.cell(exc.CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex))
+          .value = exc.DoubleCellValue(product.price);
+      sheet.cell(exc.CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: rowIndex))
+          .value = exc.IntCellValue(product.stock);
+      sheet.cell(exc.CellIndex.indexByColumnRow(columnIndex: 5, rowIndex: rowIndex))
+          .value = exc.TextCellValue(categoryName);
+      sheet.cell(exc.CellIndex.indexByColumnRow(columnIndex: 6, rowIndex: rowIndex))
+          .value = exc.TextCellValue(product.barcode ?? '');
+    }
+
+    final bytes = excel.encode();
+
+    if (bytes != null) {
+      final String? outputFile = await FilePicker.platform.saveFile(
+        fileName: 'export_produits.xlsx',
+        type: FileType.custom,
+        allowedExtensions: ['xlsx'],
+      );
+
+      if (outputFile != null) {
+        final file = File(outputFile);
+        await file.writeAsBytes(bytes);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Produits exportés avec succès vers : $outputFile'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Exportation annulée.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erreur lors de l\'exportation des produits.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _generateExcelTemplate(BuildContext context) async {

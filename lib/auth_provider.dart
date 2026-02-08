@@ -264,18 +264,21 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // Sales operations
-  Future<Map<String, dynamic>?> completeSale() async {
+  Future<Map<String, dynamic>?> completeSale({double? amountPaid}) async {
     if (_cart.isEmpty || _currentUser == null) return null;
 
     final customer = _selectedCustomer ?? Customer.walkin;
     List<CartItem> currentCart = List.from(_cart); // Create a copy of the cart
 
     try {
+      final change = amountPaid != null ? amountPaid - cartTotal : null;
       final sale = Sale(
         date: DateTime.now(),
         userId: _currentUser!.id!,
         total: cartTotal,
         customerId: customer.id == 0 ? null : customer.id, // Store null for walk-in customer
+        amountPaid: amountPaid,
+        change: change,
       );
 
       final items = currentCart
