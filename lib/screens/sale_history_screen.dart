@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:excel/excel.dart' as exc;
+import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 import '../auth_provider.dart';
 import '../models.dart';
 import '../widgets/app_sidebar.dart';
@@ -260,6 +263,12 @@ class _SaleHistoryScreenState extends State<SaleHistoryScreen> {
             ),
             onPressed: auth.toggleTheme,
           ),
+          if (auth.isAdmin)
+            IconButton(
+              icon: const Icon(Icons.download),
+              onPressed: () => _exportSalesToExcel(context),
+              tooltip: 'Exporter vers Excel',
+            ),
           if (auth.isAdmin)
             PopupMenuButton<String>(
               onSelected: (value) {
@@ -708,6 +717,197 @@ class _SaleHistoryScreenState extends State<SaleHistoryScreen> {
         );
       },
     );
+  }
+
+  Future<void> _showCustomDateRangePicker(BuildContext context) async {
+    final auth = context.read<AuthProvider>();
+    final _startDateController = TextEditingController();
+    final _endDateController = TextEditingController();
+    DateTime? startDate;
+    DateTime? endDate;
+    final _formKey = GlobalKey<FormState>();
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Sélectionner une période'),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _startDateController,
+                  decoration: const InputDecoration(
+                    labelText: 'Date de début',
+                    suffixIcon: Icon(Icons.calendar_today),
+                  ),
+                  readOnly: true,
+                  onTap: () async {
+                    final pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: startDate ?? DateTime.now(),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime.now(),
+                    );
+                    if (pickedDate != null) {
+                      startDate = pickedDate;
+                      _startDateController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
+                    }
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Veuillez sélectionner une date de début.';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _endDateController,
+                  decoration: const InputDecoration(
+                    labelText: 'Date de fin',
+                    suffixIcon: Icon(Icons.calendar_today),
+                  ),
+                  readOnly: true,
+                  onTap: () async {
+                    final pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: endDate ?? startDate ?? DateTime.now(),
+                      firstDate: startDate ?? DateTime(2020),
+                      lastDate: DateTime.now(),
+                    );
+                    if (pickedDate != null) {
+                      endDate = pickedDate;
+                      _endDateController.text = DateFormat('dd/MM/yyyy').format(pickedDate);
+                    }
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Veuillez sélectionner une date de fin.';
+                    }
+                    if (startDate != null && endDate != null && endDate!.isBefore(startDate!)) {
+                      return 'La date de fin ne peut pas être antérieure à la date de début.';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  Navigator.pop(context, DateTimeRange(start: startDate!, end: endDate!));
+                }
+              },
+              child: const Text('Exporter'),
+            ),
+          ],
+        );
+      },
+    ).then((dateRange) async {
+      if (dateRange == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Exportation annulée.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      final adjustedEndDate = DateTime(dateRange.end.year, dateRange.end.month, dateRange.end.day, 23, 59, 59);
+      final List<SaleWithItems> salesData = await auth.getSalesWithItemsInDateRange(dateRange.start, adjustedEndDate);
+
+      if (salesData.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Aucune vente à exporter pour cette période.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      final excel = exc.Excel.createExcel();
+      final exc.Sheet sheet = excel['Ventes'];
+      excel.setDefaultSheet('Ventes');
+      if (excel.tables.containsKey('Sheet1')) {
+        excel.delete('Sheet1');
+      }
+
+      final headers = [
+        'ID Vente', 'Date', 'Heure', 'Caissier', 'Client',
+        'Nom Produit', 'Quantité', 'Prix Unitaire', 'Sous-total'
+      ];
+      sheet.appendRow(headers.map((h) => exc.TextCellValue(h)).toList());
+
+      for (final saleWithItems in salesData) {
+        final sale = saleWithItems.sale;
+        final cashier = auth.users.firstWhere((u) => u.id == sale.userId, orElse: () => User(id: -1, username: 'Inconnu', passwordHash: '', role: '')).username;
+        final customer = sale.customerId != null
+            ? auth.customers.firstWhere((c) => c.id == sale.customerId, orElse: () => Customer(id: -1, name: 'Inconnu')).name
+            : 'Client au comptoir';
+        
+        final date = DateFormat('dd/MM/yyyy').format(sale.date);
+        final time = DateFormat('HH:mm:ss').format(sale.date);
+
+        for (final item in saleWithItems.items) {
+          final row = [
+            exc.IntCellValue(sale.id!),
+            exc.TextCellValue(date),
+            exc.TextCellValue(time),
+            exc.TextCellValue(cashier),
+            exc.TextCellValue(customer),
+            exc.TextCellValue(item.productName),
+            exc.IntCellValue(item.quantity),
+            exc.DoubleCellValue(item.unitPrice),
+            exc.DoubleCellValue(item.subtotal),
+          ];
+          sheet.appendRow(row);
+        }
+      }
+
+      final bytes = excel.encode();
+      if (bytes != null) {
+        final formattedStartDate = DateFormat('yyyy-MM-dd').format(dateRange.start);
+        final formattedEndDate = DateFormat('yyyy-MM-dd').format(dateRange.end);
+        final String? outputFile = await FilePicker.platform.saveFile(
+          fileName: 'export_ventes_${formattedStartDate}_au_${formattedEndDate}.xlsx',
+          type: FileType.custom,
+          allowedExtensions: ['xlsx'],
+        );
+
+        if (outputFile != null) {
+          final file = File(outputFile);
+          await file.writeAsBytes(bytes);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Ventes exportées avec succès vers : $outputFile'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur lors de l\'exportation des ventes.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    });
+  }
+
+  Future<void> _exportSalesToExcel(BuildContext context) async {
+    await _showCustomDateRangePicker(context);
   }
 }
 

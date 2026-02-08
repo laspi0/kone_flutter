@@ -653,6 +653,26 @@ class DatabaseHelper {
     return null;
   }
 
+  Future<List<SaleWithItems>> getSalesWithItemsInDateRange(DateTime start, DateTime end) async {
+    final db = await database;
+    final salesMaps = await db.query(
+      'sales',
+      where: 'date BETWEEN ? AND ?',
+      whereArgs: [start.toIso8601String(), end.toIso8601String()],
+      orderBy: 'date DESC',
+    );
+
+    final List<SaleWithItems> salesWithItems = [];
+
+    for (final saleMap in salesMaps) {
+      final sale = Sale.fromMap(saleMap);
+      final items = await getSaleItems(sale.id!);
+      salesWithItems.add(SaleWithItems(sale: sale, items: items));
+    }
+
+    return salesWithItems;
+  }
+
   // --- Data Clearing Methods ---
 
   /// Deletes a single sale and its items.

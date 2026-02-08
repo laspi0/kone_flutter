@@ -352,6 +352,10 @@ class AuthProvider extends ChangeNotifier {
     return await _db.getSaleItems(saleId);
   }
 
+  Future<List<SaleWithItems>> getSalesWithItemsInDateRange(DateTime start, DateTime end) async {
+    return await _db.getSalesWithItemsInDateRange(start, end);
+  }
+
   Future<void> deleteSale(int saleId) async {
     await _db.deleteSale(saleId);
     await loadSales();

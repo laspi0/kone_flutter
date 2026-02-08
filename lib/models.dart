@@ -361,3 +361,10 @@ class ShopInfo {
     );
   }
 }
+
+class SaleWithItems {
+  final Sale sale;
+  final List<SaleItem> items;
+
+  SaleWithItems({required this.sale, required this.items});
+}
