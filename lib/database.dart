@@ -7,7 +7,7 @@ import 'models.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
-  static const int databaseVersion = 11; // Mise à jour de la version de la base de données
+  static const int databaseVersion = 12; // Mise à jour de la version de la base de données
 
   DatabaseHelper._init();
 
@@ -164,6 +164,28 @@ class DatabaseHelper {
       );
 
     }
+    if (oldVersion < 12) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS cash_sessions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          opened_at TEXT NOT NULL,
+          closed_at TEXT,
+          opened_by INTEGER NOT NULL,
+          opening_amount REAL NOT NULL,
+          closing_amount REAL,
+          expected_amount REAL,
+          difference REAL,
+          status TEXT NOT NULL DEFAULT 'open',
+          note TEXT,
+          FOREIGN KEY (opened_by) REFERENCES users (id)
+        )
+      ''');
+      try {
+        await db.execute('ALTER TABLE sales ADD COLUMN session_id INTEGER');
+      } catch (e) {
+        // Column likely already exists, ignore.
+      }
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -214,12 +236,14 @@ class DatabaseHelper {
         date TEXT NOT NULL,
         user_id INTEGER NOT NULL,
         customer_id INTEGER,
+        session_id INTEGER,
         total REAL NOT NULL,
         status TEXT NOT NULL,
         amount_paid REAL DEFAULT NULL,
         change REAL DEFAULT NULL,
         FOREIGN KEY (user_id) REFERENCES users (id),
-        FOREIGN KEY (customer_id) REFERENCES customers (id)
+        FOREIGN KEY (customer_id) REFERENCES customers (id),
+        FOREIGN KEY (session_id) REFERENCES cash_sessions (id)
       )
     ''');
 
@@ -246,6 +270,22 @@ class DatabaseHelper {
         email TEXT NOT NULL,
         logo TEXT,
         low_stock_threshold INTEGER NOT NULL DEFAULT 10
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE cash_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        opened_at TEXT NOT NULL,
+        closed_at TEXT,
+        opened_by INTEGER NOT NULL,
+        opening_amount REAL NOT NULL,
+        closing_amount REAL,
+        expected_amount REAL,
+        difference REAL,
+        status TEXT NOT NULL DEFAULT 'open',
+        note TEXT,
+        FOREIGN KEY (opened_by) REFERENCES users (id)
       )
     ''');
 
@@ -405,6 +445,96 @@ class DatabaseHelper {
     final db = await database;
     final maps = await db.query('users', orderBy: 'username');
     return maps.map((map) => User.fromMap(map)).toList();
+  }
+
+  // Cash Sessions
+  Future<CashSession?> getOpenCashSession() async {
+    final db = await database;
+    final maps = await db.query(
+      'cash_sessions',
+      where: 'status = ?',
+      whereArgs: ['open'],
+      orderBy: 'opened_at DESC',
+      limit: 1,
+    );
+    if (maps.isNotEmpty) {
+      return CashSession.fromMap(maps.first);
+    }
+    return null;
+  }
+
+  Future<int> openCashSession(CashSession session) async {
+    final db = await database;
+    return await db.insert('cash_sessions', session.toMap());
+  }
+
+  Future<void> closeCashSession({
+    required int sessionId,
+    required double closingAmount,
+    required double expectedAmount,
+    required double difference,
+  }) async {
+    final db = await database;
+    await db.update(
+      'cash_sessions',
+      {
+        'closed_at': DateTime.now().toIso8601String(),
+        'closing_amount': closingAmount,
+        'expected_amount': expectedAmount,
+        'difference': difference,
+        'status': 'closed',
+      },
+      where: 'id = ?',
+      whereArgs: [sessionId],
+    );
+  }
+
+  Future<Map<String, double>> getCashSessionTotals(int sessionId) async {
+    final db = await database;
+    final result = await db.rawQuery('''
+      SELECT
+        COALESCE(SUM(total), 0) AS total_sales,
+        COALESCE(SUM(amount_paid), 0) AS total_received,
+        COALESCE(SUM(change), 0) AS total_change,
+        COUNT(*) AS total_count
+      FROM sales
+      WHERE session_id = ?
+        AND status = 'completed'
+    ''', [sessionId]);
+
+    final row = result.first;
+    return {
+      'total_sales': (row['total_sales'] as num).toDouble(),
+      'total_received': (row['total_received'] as num).toDouble(),
+      'total_change': (row['total_change'] as num).toDouble(),
+      'total_count': (row['total_count'] as num).toDouble(),
+    };
+  }
+
+  Future<List<CashSession>> getCashSessions() async {
+    final db = await database;
+    final maps = await db.query(
+      'cash_sessions',
+      orderBy: 'opened_at DESC',
+    );
+    return maps.map((map) => CashSession.fromMap(map)).toList();
+  }
+
+  Future<void> deleteCashSession(int sessionId) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.update(
+        'sales',
+        {'session_id': null},
+        where: 'session_id = ?',
+        whereArgs: [sessionId],
+      );
+      await txn.delete(
+        'cash_sessions',
+        where: 'id = ?',
+        whereArgs: [sessionId],
+      );
+    });
   }
 
   // Sales

@@ -44,6 +44,9 @@ class _SalesScreenState extends State<SalesScreen> {
         _barcodeFocusNode.requestFocus();
       });
     }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _promptOpenCashSessionIfNeeded();
+    });
   }
 
   @override
@@ -254,6 +257,8 @@ class _SalesScreenState extends State<SalesScreen> {
                             ],
                           ),
                         ),
+                        const SizedBox(width: 8),
+                        _CurrentCashChip(sessionId: auth.openCashSession?.id),
                       ],
                     );
                   },
@@ -263,18 +268,46 @@ class _SalesScreenState extends State<SalesScreen> {
           ),
           Consumer<AuthProvider>(
             builder: (context, auth, _) {
-              return IconButton(
-                icon: Icon(
-                  auth.themeMode == ThemeMode.dark
-                      ? Icons.light_mode_outlined
-                      : Icons.dark_mode_outlined,
-                ),
-                onPressed: auth.toggleTheme,
-                style: IconButton.styleFrom(
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest,
-                ),
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      auth.openCashSession == null
+                          ? Icons.lock_open_outlined
+                          : Icons.lock_outline,
+                    ),
+                    tooltip: auth.openCashSession == null
+                        ? 'Ouvrir la caisse'
+                        : 'Cloturer la caisse',
+                    onPressed: () {
+                      if (auth.openCashSession == null) {
+                        _showOpenCashSessionDialog(context);
+                      } else {
+                        _showCloseCashSessionDialog(context, auth);
+                      }
+                    },
+                    style: IconButton.styleFrom(
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: Icon(
+                      auth.themeMode == ThemeMode.dark
+                          ? Icons.light_mode_outlined
+                          : Icons.dark_mode_outlined,
+                    ),
+                    onPressed: auth.toggleTheme,
+                    style: IconButton.styleFrom(
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                    ),
+                  ),
+                ],
               );
             },
           ),
@@ -833,6 +866,10 @@ class _SalesScreenState extends State<SalesScreen> {
   }
 
   void _completeSale(BuildContext context, AuthProvider auth) async {
+    if (auth.openCashSession == null) {
+      await _showOpenCashSessionDialog(context);
+      return;
+    }
     final amountPaid = await _showPaymentDialog(context, auth);
     if (amountPaid == null) return;
 
@@ -966,6 +1003,166 @@ class _SalesScreenState extends State<SalesScreen> {
     }
   }
 
+  Future<void> _promptOpenCashSessionIfNeeded() async {
+    if (!mounted) return;
+    final auth = context.read<AuthProvider>();
+    if (auth.openCashSession == null) {
+      await _showOpenCashSessionDialog(context);
+    }
+  }
+
+  Future<void> _showOpenCashSessionDialog(
+    BuildContext context,
+  ) async {
+    final auth = context.read<AuthProvider>();
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Ouvrir la caisse'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(
+              labelText: 'Montant initial (FCFA)',
+              border: OutlineInputBorder(),
+            ),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Veuillez entrer un montant';
+              }
+              final parsed = double.tryParse(value.trim());
+              if (parsed == null || parsed < 0) {
+                return 'Montant invalide';
+              }
+              return null;
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              if (mounted) {
+                context.go('/home');
+              }
+            },
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              final opening = double.parse(controller.text.trim());
+              await auth.startCashSession(openingAmount: opening);
+              if (mounted) {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Caisse ouverte'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            },
+            child: const Text('Ouvrir'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showCloseCashSessionDialog(
+    BuildContext context,
+    AuthProvider auth,
+  ) async {
+    final summary = await auth.getOpenCashSessionSummary();
+    if (summary == null || auth.openCashSession == null) return;
+    final openingAmount = auth.openCashSession!.openingAmount;
+    final totalSales = summary['total_sales'] ?? 0;
+    final totalReceived = summary['total_received'] ?? 0;
+    final totalChange = summary['total_change'] ?? 0;
+    final expectedAmount = summary['expected_amount'] ?? 0;
+
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cloturer la caisse'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Ouverture: ${openingAmount.toStringAsFixed(0)} FCFA'),
+              const SizedBox(height: 4),
+              Text('Total ventes: ${totalSales.toStringAsFixed(0)} FCFA'),
+              Text('Encaisse: ${totalReceived.toStringAsFixed(0)} FCFA'),
+              Text('Monnaie rendue: ${totalChange.toStringAsFixed(0)} FCFA'),
+              const SizedBox(height: 8),
+              Text('Attendu: ${expectedAmount.toStringAsFixed(0)} FCFA'),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: const InputDecoration(
+                  labelText: 'Montant compte (FCFA)',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Veuillez entrer un montant';
+                  }
+                  final parsed = double.tryParse(value.trim());
+                  if (parsed == null || parsed < 0) {
+                    return 'Montant invalide';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              final closing = double.parse(controller.text.trim());
+              final ok = await auth.closeOpenCashSession(
+                closingAmount: closing,
+              );
+              if (mounted) {
+                Navigator.pop(context);
+                if (ok) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Caisse cloturee'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Cloturer'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<double?> _showPaymentDialog(
     BuildContext context,
     AuthProvider auth,
@@ -1048,6 +1245,70 @@ class _SalesScreenState extends State<SalesScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _CurrentCashChip extends StatelessWidget {
+  final int? sessionId;
+
+  const _CurrentCashChip({required this.sessionId});
+
+  @override
+  Widget build(BuildContext context) {
+    if (sessionId == null) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(
+          'Caisse fermee',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+          ),
+        ),
+      );
+    }
+
+    return FutureBuilder<Map<String, double>?>(
+      future: context.read<AuthProvider>().getOpenCashSessionSummary(),
+      builder: (context, snapshot) {
+        final summary = snapshot.data;
+        if (summary == null) {
+          return const SizedBox.shrink();
+        }
+        final expected = summary['expected_amount'] ?? 0;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.account_balance_wallet_outlined,
+                size: 14,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Caisse: ${expected.toStringAsFixed(0)} FCFA',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -14,6 +14,7 @@ class AuthProvider extends ChangeNotifier {
   List<User> _users = [];
   Customer? _selectedCustomer;
   ShopInfo? _shopInfo;
+  CashSession? _openCashSession;
 
   final DatabaseHelper _db = DatabaseHelper.instance;
 
@@ -28,6 +29,7 @@ class AuthProvider extends ChangeNotifier {
   List<User> get users => _users;
   ShopInfo? get shopInfo => _shopInfo;
   Customer? get selectedCustomer => _selectedCustomer;
+  CashSession? get openCashSession => _openCashSession;
 
   bool get isLoggedIn => _currentUser != null;
   bool get isAdmin => _currentUser?.isAdmin ?? false;
@@ -76,6 +78,7 @@ class AuthProvider extends ChangeNotifier {
     await loadSales();
     await loadCustomers();
     await loadShopInfo();
+    await loadOpenCashSession();
   }
 
   void logout() {
@@ -87,6 +90,92 @@ class AuthProvider extends ChangeNotifier {
     _users = [];
     _selectedCustomer = null;
     _shopInfo = null;
+    _openCashSession = null;
+    notifyListeners();
+  }
+
+  Future<void> loadOpenCashSession() async {
+    _openCashSession = await _db.getOpenCashSession();
+    notifyListeners();
+  }
+
+  Future<CashSession?> startCashSession({
+    required double openingAmount,
+    String? note,
+  }) async {
+    if (_currentUser == null) return null;
+    final session = CashSession(
+      openedAt: DateTime.now(),
+      openedBy: _currentUser!.id!,
+      openingAmount: openingAmount,
+      note: note,
+      status: 'open',
+    );
+    final id = await _db.openCashSession(session);
+    _openCashSession = session.copyWith(id: id);
+    notifyListeners();
+    return _openCashSession;
+  }
+
+  Future<Map<String, double>?> getOpenCashSessionSummary() async {
+    if (_openCashSession?.id == null) return null;
+    final totals = await _db.getCashSessionTotals(_openCashSession!.id!);
+    final expected =
+        _openCashSession!.openingAmount +
+        (totals['total_received']! - totals['total_change']!);
+    return {
+      ...totals,
+      'expected_amount': expected,
+    };
+  }
+
+  Future<bool> closeOpenCashSession({
+    required double closingAmount,
+  }) async {
+    if (_openCashSession?.id == null) return false;
+    final summary = await getOpenCashSessionSummary();
+    if (summary == null) return false;
+    final expected = summary['expected_amount']!;
+    final difference = closingAmount - expected;
+    await _db.closeCashSession(
+      sessionId: _openCashSession!.id!,
+      closingAmount: closingAmount,
+      expectedAmount: expected,
+      difference: difference,
+    );
+    _openCashSession = null;
+    notifyListeners();
+    return true;
+  }
+
+  Future<List<CashSessionSummary>> getCashSessionSummaries() async {
+    final sessions = await _db.getCashSessions();
+    final summaries = <CashSessionSummary>[];
+
+    for (final session in sessions) {
+      if (session.id == null) continue;
+      final totals = await _db.getCashSessionTotals(session.id!);
+      final expected = session.expectedAmount ??
+          (session.openingAmount +
+              (totals['total_received']! - totals['total_change']!));
+
+      summaries.add(
+        CashSessionSummary(
+          session: session,
+          totalSales: totals['total_sales'] ?? 0,
+          totalReceived: totals['total_received'] ?? 0,
+          totalChange: totals['total_change'] ?? 0,
+          expectedAmount: expected,
+          totalCount: (totals['total_count'] ?? 0).round(),
+        ),
+      );
+    }
+
+    return summaries;
+  }
+
+  Future<void> deleteCashSession(int sessionId) async {
+    await _db.deleteCashSession(sessionId);
     notifyListeners();
   }
 
@@ -207,6 +296,11 @@ class AuthProvider extends ChangeNotifier {
   // Sales operations
   Future<Map<String, dynamic>?> completeSale({double? amountPaid}) async {
     if (_cart.isEmpty || _currentUser == null) return null;
+    if (_openCashSession == null) {
+      _errorMessage = 'Aucune caisse ouverte.';
+      notifyListeners();
+      return null;
+    }
 
     final customer = _selectedCustomer ?? Customer.walkin;
     List<CartItem> currentCart = List.from(_cart); // Create a copy of the cart
@@ -220,6 +314,7 @@ class AuthProvider extends ChangeNotifier {
         customerId: customer.id == 0 ? null : customer.id, // Store null for walk-in customer
         amountPaid: amountPaid,
         change: change,
+        sessionId: _openCashSession!.id,
       );
 
       final items = currentCart

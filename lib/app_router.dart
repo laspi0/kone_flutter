@@ -5,6 +5,7 @@ import 'screens/products_screen.dart';
 import 'screens/categories_screen.dart';
 import 'screens/sales_screen.dart';
 import 'screens/sale_history_screen.dart';
+import 'screens/cash_journal_screen.dart';
 import 'screens/customers_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/user_management_screen.dart'; // New import
@@ -49,6 +50,11 @@ class AppRouter {
             const NoTransitionPage(child: SaleHistoryScreen()),
       ),
       GoRoute(
+        path: '/cash-journal',
+        pageBuilder: (context, state) =>
+            const NoTransitionPage(child: CashJournalScreen()),
+      ),
+      GoRoute(
         path: '/settings',
         pageBuilder: (context, state) =>
             const NoTransitionPage(child: SettingsScreen()),
@@ -61,4 +67,3 @@ class AppRouter {
     ],
   );
 }
-

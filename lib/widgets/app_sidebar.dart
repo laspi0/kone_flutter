@@ -82,6 +82,12 @@ class AppSidebar extends StatelessWidget {
                       selected: currentPage == '/sale-history',
                       onTap: () => context.go('/sale-history'),
                     ),
+                    SidebarItem(
+                      icon: Icons.account_balance_wallet_outlined,
+                      label: 'Journal de caisse',
+                      selected: currentPage == '/cash-journal',
+                      onTap: () => context.go('/cash-journal'),
+                    ),
                     const SizedBox(height: 8),
                     if (user.isAdmin) ...[
                       Padding(

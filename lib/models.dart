@@ -131,6 +131,7 @@ class Sale {
   final String status;
   final double? amountPaid; // NOUVEAU: Montant reçu du client
   final double? change; // NOUVEAU: Monnaie rendue (calculé automatiquement)
+  final int? sessionId; // Session de caisse
 
   Sale({
     this.id,
@@ -141,6 +142,7 @@ class Sale {
     this.status = 'completed',
     this.amountPaid,
     this.change,
+    this.sessionId,
   });
 
   Map<String, dynamic> toMap() {
@@ -153,6 +155,7 @@ class Sale {
       'status': status,
       'amount_paid': amountPaid,
       'change': change,
+      'session_id': sessionId,
     };
   }
 
@@ -170,6 +173,7 @@ class Sale {
       change: map['change'] != null 
           ? (map['change'] as num).toDouble() 
           : null,
+      sessionId: map['session_id'],
     );
   }
 
@@ -182,6 +186,7 @@ class Sale {
     String? status,
     double? amountPaid,
     double? change,
+    int? sessionId,
   }) {
     return Sale(
       id: id ?? this.id,
@@ -192,12 +197,121 @@ class Sale {
       status: status ?? this.status,
       amountPaid: amountPaid ?? this.amountPaid,
       change: change ?? this.change,
+      sessionId: sessionId ?? this.sessionId,
     );
   }
 
   // Calculer automatiquement la monnaie rendue
   double get calculatedChange => 
       amountPaid != null ? amountPaid! - total : 0.0;
+}
+
+class CashSession {
+  final int? id;
+  final DateTime openedAt;
+  final DateTime? closedAt;
+  final int openedBy;
+  final double openingAmount;
+  final double? closingAmount;
+  final double? expectedAmount;
+  final double? difference;
+  final String status; // open, closed
+  final String? note;
+
+  CashSession({
+    this.id,
+    required this.openedAt,
+    this.closedAt,
+    required this.openedBy,
+    required this.openingAmount,
+    this.closingAmount,
+    this.expectedAmount,
+    this.difference,
+    this.status = 'open',
+    this.note,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'opened_at': openedAt.toIso8601String(),
+      'closed_at': closedAt?.toIso8601String(),
+      'opened_by': openedBy,
+      'opening_amount': openingAmount,
+      'closing_amount': closingAmount,
+      'expected_amount': expectedAmount,
+      'difference': difference,
+      'status': status,
+      'note': note,
+    };
+  }
+
+  factory CashSession.fromMap(Map<String, dynamic> map) {
+    return CashSession(
+      id: map['id'],
+      openedAt: DateTime.parse(map['opened_at']),
+      closedAt: map['closed_at'] != null
+          ? DateTime.parse(map['closed_at'])
+          : null,
+      openedBy: map['opened_by'],
+      openingAmount: (map['opening_amount'] as num).toDouble(),
+      closingAmount: map['closing_amount'] != null
+          ? (map['closing_amount'] as num).toDouble()
+          : null,
+      expectedAmount: map['expected_amount'] != null
+          ? (map['expected_amount'] as num).toDouble()
+          : null,
+      difference: map['difference'] != null
+          ? (map['difference'] as num).toDouble()
+          : null,
+      status: map['status'],
+      note: map['note'],
+    );
+  }
+
+  CashSession copyWith({
+    int? id,
+    DateTime? openedAt,
+    DateTime? closedAt,
+    int? openedBy,
+    double? openingAmount,
+    double? closingAmount,
+    double? expectedAmount,
+    double? difference,
+    String? status,
+    String? note,
+  }) {
+    return CashSession(
+      id: id ?? this.id,
+      openedAt: openedAt ?? this.openedAt,
+      closedAt: closedAt ?? this.closedAt,
+      openedBy: openedBy ?? this.openedBy,
+      openingAmount: openingAmount ?? this.openingAmount,
+      closingAmount: closingAmount ?? this.closingAmount,
+      expectedAmount: expectedAmount ?? this.expectedAmount,
+      difference: difference ?? this.difference,
+      status: status ?? this.status,
+      note: note ?? this.note,
+    );
+  }
+}
+
+class CashSessionSummary {
+  final CashSession session;
+  final double totalSales;
+  final double totalReceived;
+  final double totalChange;
+  final double expectedAmount;
+  final int totalCount;
+
+  CashSessionSummary({
+    required this.session,
+    required this.totalSales,
+    required this.totalReceived,
+    required this.totalChange,
+    required this.expectedAmount,
+    required this.totalCount,
+  });
 }
 
 class SaleItem {
