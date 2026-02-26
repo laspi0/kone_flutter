@@ -81,12 +81,12 @@ class PdfService {
                       pw.SizedBox(height: 2),
                       pw.Text(
                         shopInfo.address,
-                        style: const pw.TextStyle(fontSize: 9),
+                        style: const pw.TextStyle(fontSize: 8),
                         textAlign: pw.TextAlign.center,
                       ),
                       pw.Text(
                         'Tel: ${shopInfo.phone}',
-                        style: const pw.TextStyle(fontSize: 9),
+                        style: const pw.TextStyle(fontSize: 8),
                         textAlign: pw.TextAlign.center,
                       ),
                     ],
@@ -105,23 +105,23 @@ class PdfService {
                   children: [
                     pw.Text(
                       'Date: ${DateFormat('dd/MM/yyyy').format(sale.date)}',
-                      style: const pw.TextStyle(fontSize: 9),
+                      style: const pw.TextStyle(fontSize: 8),
                     ),
                     pw.Text(
                       DateFormat('HH:mm').format(sale.date),
-                      style: const pw.TextStyle(fontSize: 9),
+                      style: const pw.TextStyle(fontSize: 8),
                     ),
                   ],
                 ),
                 pw.SizedBox(height: 2),
                 pw.Text(
                   'Caissier: $cashierName',
-                  style: const pw.TextStyle(fontSize: 9),
+                  style: const pw.TextStyle(fontSize: 8),
                 ),
                 pw.SizedBox(height: 2),
                 pw.Text(
                   'Vente #${sale.id}',
-                  style: const pw.TextStyle(fontSize: 9),
+                  style: const pw.TextStyle(fontSize: 8),
                 ),
 
                 // Informations client (si existe)
@@ -129,12 +129,12 @@ class PdfService {
                   pw.SizedBox(height: 2),
                   pw.Text(
                     'Client: ${customer.name}',
-                    style: const pw.TextStyle(fontSize: 9),
+                    style: const pw.TextStyle(fontSize: 8),
                   ),
                   if (customer.phone?.isNotEmpty == true)
                     pw.Text(
                       'Tél: ${customer.phone}',
-                      style: const pw.TextStyle(fontSize: 9),
+                      style: const pw.TextStyle(fontSize: 8),
                     ),
                 ],
 
@@ -149,33 +149,33 @@ class PdfService {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Expanded(
-                      flex: 5,
+                      flex: 3,
                       child: pw.Text(
                         'Produit',
                         style: pw.TextStyle(
-                          fontSize: 9,
+                          fontSize: 8,
                           fontWeight: pw.FontWeight.bold,
                         ),
                       ),
                     ),
                     pw.Container(
-                      width: 30,
+                      width: 25,
                       alignment: pw.Alignment.centerRight,
                       child: pw.Text(
                         'Qté',
                         style: pw.TextStyle(
-                          fontSize: 9,
+                          fontSize: 8,
                           fontWeight: pw.FontWeight.bold,
                         ),
                       ),
                     ),
                     pw.Container(
-                      width: 50,
+                      width: 45,
                       alignment: pw.Alignment.centerRight,
                       child: pw.Text(
                         'Prix',
                         style: pw.TextStyle(
-                          fontSize: 9,
+                          fontSize: 8,
                           fontWeight: pw.FontWeight.bold,
                         ),
                       ),
@@ -198,27 +198,27 @@ class PdfService {
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
                           pw.Expanded(
-                            flex: 5,
+                            flex: 3,
                             child: pw.Text(
                               item.productName,
-                              style: const pw.TextStyle(fontSize: 9),
+                              style: const pw.TextStyle(fontSize: 8),
                               maxLines: 2,
                             ),
                           ),
                           pw.Container(
-                            width: 30,
+                            width: 25,
                             alignment: pw.Alignment.centerRight,
                             child: pw.Text(
                               '${item.quantity}',
-                              style: const pw.TextStyle(fontSize: 9),
+                              style: const pw.TextStyle(fontSize: 8),
                             ),
                           ),
                           pw.Container(
-                            width: 50,
+                            width: 45,
                             alignment: pw.Alignment.centerRight,
                             child: pw.Text(
                               formatCurrency.format(item.subtotal),
-                              style: const pw.TextStyle(fontSize: 9),
+                              style: const pw.TextStyle(fontSize: 8),
                             ),
                           ),
                         ],
@@ -230,7 +230,7 @@ class PdfService {
                             child: pw.Text(
                               '${item.quantity} × ${formatCurrency.format(item.unitPrice)}',
                               style: const pw.TextStyle(
-                                fontSize: 8,
+                                fontSize: 7,
                                 color: PdfColors.grey700,
                               ),
                             ),
