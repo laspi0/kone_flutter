@@ -118,10 +118,7 @@ class _AddCustomItemDialogState extends State<_AddCustomItemDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('Annuler'),
         ),
-        FilledButton(
-          onPressed: _addCustomItem,
-          child: const Text('Ajouter'),
-        ),
+        FilledButton(onPressed: _addCustomItem, child: const Text('Ajouter')),
       ],
     );
   }
@@ -131,10 +128,7 @@ class _PaymentDialog extends StatefulWidget {
   final double total;
   final int itemCount;
 
-  const _PaymentDialog({
-    required this.total,
-    required this.itemCount,
-  });
+  const _PaymentDialog({required this.total, required this.itemCount});
 
   @override
   State<_PaymentDialog> createState() => _PaymentDialogState();
@@ -148,7 +142,9 @@ class _PaymentDialogState extends State<_PaymentDialog> {
   @override
   void initState() {
     super.initState();
+    _amountPaidController.text = widget.total.toInt().toString();
     _amountPaidController.addListener(_calculateChange);
+    _calculateChange();
   }
 
   @override
@@ -159,7 +155,8 @@ class _PaymentDialogState extends State<_PaymentDialog> {
   }
 
   void _calculateChange() {
-    final amountPaid = double.tryParse(_amountPaidController.text.trim()) ?? 0.0;
+    final amountPaid =
+        double.tryParse(_amountPaidController.text.trim()) ?? 0.0;
     setState(() {
       _change = amountPaid - widget.total;
     });
@@ -209,7 +206,10 @@ class _PaymentDialogState extends State<_PaymentDialog> {
         FilledButton(
           onPressed: () {
             if (_formKey.currentState!.validate()) {
-              Navigator.pop(context, double.parse(_amountPaidController.text.trim()));
+              Navigator.pop(
+                context,
+                double.parse(_amountPaidController.text.trim()),
+              );
             }
           },
           child: const Text('Confirmer'),
@@ -225,7 +225,8 @@ class _CustomerSelectorContent extends StatefulWidget {
   const _CustomerSelectorContent({required this.auth});
 
   @override
-  State<_CustomerSelectorContent> createState() => _CustomerSelectorContentState();
+  State<_CustomerSelectorContent> createState() =>
+      _CustomerSelectorContentState();
 }
 
 class _CustomerSelectorContentState extends State<_CustomerSelectorContent> {
@@ -274,15 +275,22 @@ class _CustomerSelectorContentState extends State<_CustomerSelectorContent> {
                 return const Center(child: Text('Aucun client trouvé.'));
               } else {
                 final customers = snapshot.data!
-                    .where((customer) => customer.name
-                        .toLowerCase()
-                        .contains(_searchQuery.toLowerCase()))
+                    .where(
+                      (customer) => customer.name.toLowerCase().contains(
+                        _searchQuery.toLowerCase(),
+                      ),
+                    )
                     .toList();
 
                 return ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                  itemCount: customers.length + 1, // +1 for "Client au comptoir"
-                  separatorBuilder: (context, index) => const SizedBox(height: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 8,
+                  ),
+                  itemCount:
+                      customers.length + 1, // +1 for "Client au comptoir"
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       // "Client au comptoir" option
