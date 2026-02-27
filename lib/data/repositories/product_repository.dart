@@ -9,7 +9,12 @@ class ProductRepository {
 
   Future<List<Product>> getProducts() async {
     final db = await _dbHelper.database;
-    final maps = await db.query('products', orderBy: 'name');
+    final maps = await db.query(
+      'products',
+      where: 'name != ?',
+      whereArgs: ['Article personnalisé'],
+      orderBy: 'name',
+    );
     return maps.map((map) => Product.fromMap(map)).toList();
   }
 
@@ -32,8 +37,8 @@ class ProductRepository {
     final db = await _dbHelper.database;
     final maps = await db.query(
       'products',
-      where: 'category_id = ?',
-      whereArgs: [categoryId],
+      where: 'category_id = ? AND name != ?',
+      whereArgs: [categoryId, 'Article personnalisé'],
       orderBy: 'name',
     );
     return maps.map((map) => Product.fromMap(map)).toList();

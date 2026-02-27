@@ -7,7 +7,9 @@ import 'models.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
-  static const int databaseVersion = 13; // Mise à jour de la version de la base de données
+  static const int databaseVersion = 14;
+  static const String _CUSTOM_CATEGORY_NAME = 'Divers';
+  static const String _CUSTOM_PRODUCT_NAME = 'Article personnalisé';
 
   DatabaseHelper._init();
 
@@ -102,7 +104,7 @@ class DatabaseHelper {
       ''');
       await _insertDefaultShopInfo(db);
     }
-    
+
     if (oldVersion < 6) {
       // Add amount_paid and change columns to sales table
       await db.execute('''
@@ -120,23 +122,28 @@ class DatabaseHelper {
       // Set barcodes for default products that might not have one
       await db.rawUpdate(
         "UPDATE products SET barcode = ? WHERE name = ? AND barcode IS NULL",
-        ['1111111111111', 'iPhone 15 Pro']);
+        ['1111111111111', 'iPhone 15 Pro'],
+      );
       await db.rawUpdate(
         "UPDATE products SET barcode = ? WHERE name = ? AND barcode IS NULL",
-        ['2222222222222', 'MacBook Air M2']);
+        ['2222222222222', 'MacBook Air M2'],
+      );
     }
-     if (oldVersion < 9) {
+    if (oldVersion < 9) {
       try {
-        await db.execute('ALTER TABLE shop_info ADD COLUMN low_stock_threshold INTEGER NOT NULL DEFAULT 10');
+        await db.execute(
+          'ALTER TABLE shop_info ADD COLUMN low_stock_threshold INTEGER NOT NULL DEFAULT 10',
+        );
       } catch (e) {
         // Column likely already exists, which is fine.
-
       }
     }
     if (oldVersion < 10) {
       // Add is_active column to users table
-      await db.execute('ALTER TABLE users ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1');
-      
+      await db.execute(
+        'ALTER TABLE users ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1',
+      );
+
       // Also add the superuser if it doesn't exist, for existing databases
       await db.insert(
         'users',
@@ -146,11 +153,11 @@ class DatabaseHelper {
           'role': 'superuser',
           'is_active': 1,
         },
-        conflictAlgorithm: ConflictAlgorithm.ignore, // Ignore if 'superuser' already exists
+        conflictAlgorithm:
+            ConflictAlgorithm.ignore, // Ignore if 'superuser' already exists
       );
     }
     if (oldVersion < 11) {
-
       // Re-run superuser creation just in case it failed before.
       await db.insert(
         'users',
@@ -160,18 +167,66 @@ class DatabaseHelper {
           'role': 'superuser',
           'is_active': 1,
         },
-        conflictAlgorithm: ConflictAlgorithm.ignore, // Ignore if 'superuser' already exists
+        conflictAlgorithm:
+            ConflictAlgorithm.ignore, // Ignore if 'superuser' already exists
       );
-
     }
-    if (oldVersion < 13) {
-      // Make product_id nullable and add is_custom to sale_items
-      await db.execute('ALTER TABLE sale_items ADD COLUMN is_custom INTEGER NOT NULL DEFAULT 0');
-      // Note: Making an existing column nullable in SQLite often requires recreating the table.
-      // For simplicity and given the context, we'll assume the existing data won't break
-      // if product_id is null for new custom items. If this were a production app
-      // with existing data, a more robust migration would be needed (e.g., create new table, copy data, drop old, rename new).
-      // For now, we'll rely on the application logic to handle null product_id for custom items.
+    if (oldVersion < 14) {
+      // Changed from 13 to 14 to ensure it runs for databases at version 13
+      // Migration to make product_id nullable and add is_custom to sale_items
+      // Check if product_id is already nullable. If not, perform the migration.
+      final tableInfo = await db.rawQuery("PRAGMA table_info(sale_items)");
+      final productIdColumn = tableInfo.firstWhere(
+        (col) => col['name'] == 'product_id',
+      );
+      final isProductIdNullable =
+          productIdColumn['notnull'] == 0; // 0 means nullable, 1 means NOT NULL
+
+      if (!isProductIdNullable) {
+        await db.transaction((txn) async {
+          // 1. Rename old table
+          await txn.execute('ALTER TABLE sale_items RENAME TO sale_items_old');
+
+          // 2. Create new table with nullable product_id and is_custom column
+          await txn.execute('''
+            CREATE TABLE sale_items (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              sale_id INTEGER NOT NULL,
+              product_id INTEGER, -- Now nullable
+              product_name TEXT NOT NULL,
+              quantity INTEGER NOT NULL,
+              unit_price REAL NOT NULL,
+              subtotal REAL NOT NULL,
+              is_custom INTEGER NOT NULL DEFAULT 0, -- New field
+              FOREIGN KEY (sale_id) REFERENCES sales (id),
+              FOREIGN KEY (product_id) REFERENCES products (id)
+            )
+          ''');
+
+          // 3. Copy data from old table to new table
+          // Handle cases where product_id might have been 0 or invalid in old data
+          await txn.execute('''
+            INSERT INTO sale_items (id, sale_id, product_id, product_name, quantity, unit_price, subtotal)
+            SELECT id, sale_id, product_id, product_name, quantity, unit_price, subtotal
+            FROM sale_items_old
+          ''');
+
+          // 4. Drop the old table
+          await txn.execute('DROP TABLE sale_items_old');
+        });
+      } else {
+        // If product_id is already nullable, just ensure is_custom column exists
+        // This part is important if the database was at version 13 and product_id was already nullable
+        // but is_custom was not added.
+        final isCustomColumnExists = tableInfo.any(
+          (col) => col['name'] == 'is_custom',
+        );
+        if (!isCustomColumnExists) {
+          await db.execute(
+            'ALTER TABLE sale_items ADD COLUMN is_custom INTEGER NOT NULL DEFAULT 0',
+          );
+        }
+      }
     }
   }
 
@@ -238,7 +293,7 @@ class DatabaseHelper {
       CREATE TABLE sale_items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         sale_id INTEGER NOT NULL,
-        product_id INTEGER, -- Made nullable
+        product_id INTEGER NOT NULL,
         product_name TEXT NOT NULL,
         quantity INTEGER NOT NULL,
         unit_price REAL NOT NULL,
@@ -479,7 +534,8 @@ class DatabaseHelper {
 
   Future<Map<String, double>> getCashSessionTotals(int sessionId) async {
     final db = await database;
-    final result = await db.rawQuery('''
+    final result = await db.rawQuery(
+      '''
       SELECT
         COALESCE(SUM(total), 0) AS total_sales,
         COALESCE(SUM(amount_paid), 0) AS total_received,
@@ -488,7 +544,9 @@ class DatabaseHelper {
       FROM sales
       WHERE session_id = ?
         AND status = 'completed'
-    ''', [sessionId]);
+    ''',
+      [sessionId],
+    );
 
     final row = result.first;
     return {
@@ -501,10 +559,7 @@ class DatabaseHelper {
 
   Future<List<CashSession>> getCashSessions() async {
     final db = await database;
-    final maps = await db.query(
-      'cash_sessions',
-      orderBy: 'opened_at DESC',
-    );
+    final maps = await db.query('cash_sessions', orderBy: 'opened_at DESC');
     return maps.map((map) => CashSession.fromMap(map)).toList();
   }
 
@@ -525,6 +580,46 @@ class DatabaseHelper {
     });
   }
 
+  Future<int> _getOrCreateCustomProductId(Transaction txn) async {
+    // Ensure 'Divers' category exists
+    int? categoryId;
+    final categoryMaps = await txn.query(
+      'categories',
+      where: 'name = ?',
+      whereArgs: [_CUSTOM_CATEGORY_NAME],
+    );
+
+    if (categoryMaps.isNotEmpty) {
+      categoryId = categoryMaps.first['id'] as int;
+    } else {
+      categoryId = await txn.insert('categories', {
+        'name': _CUSTOM_CATEGORY_NAME,
+        'description': 'Catégorie pour les articles personnalisés',
+      });
+    }
+
+    // Check for existing custom product
+    final productMaps = await txn.query(
+      'products',
+      where: 'name = ?',
+      whereArgs: [_CUSTOM_PRODUCT_NAME],
+    );
+
+    if (productMaps.isNotEmpty) {
+      return productMaps.first['id'] as int;
+    } else {
+      // Insert a new custom product
+      return await txn.insert('products', {
+        'name': _CUSTOM_PRODUCT_NAME,
+        'description': 'Produit générique pour les articles personnalisés',
+        'price': 0.0, // Price can be 0 as actual price comes from SaleItem
+        'stock': 999999, // Effectively unlimited stock
+        'category_id': categoryId,
+        'barcode': null, // No barcode for generic item
+      });
+    }
+  }
+
   // Sales
   Future<int> createSale(Sale sale, List<SaleItem> items) async {
     final db = await database;
@@ -532,11 +627,20 @@ class DatabaseHelper {
     return await db.transaction((txn) async {
       final saleId = await txn.insert('sales', sale.toMap());
 
-      for (var item in items) {
-        await txn.insert('sale_items', item.toMap());
+      final customProductId = await _getOrCreateCustomProductId(txn);
 
-        // Only update stock for non-custom items
-        if (!item.isCustom) {
+      for (var item in items) {
+        final itemMap = item.toMap();
+        itemMap['sale_id'] = saleId;
+        if (item.isCustom) {
+          // For custom items, use the customProductId
+          itemMap['product_id'] = customProductId;
+          await txn.insert('sale_items', itemMap);
+        } else {
+          // For regular items, insert as usual
+          await txn.insert('sale_items', itemMap);
+
+          // Update stock for regular items
           await txn.rawUpdate(
             'UPDATE products SET stock = stock - ? WHERE id = ?',
             [item.quantity, item.productId],
@@ -577,11 +681,7 @@ class DatabaseHelper {
 
   Future<Sale?> getSaleById(int id) async {
     final db = await database;
-    final maps = await db.query(
-      'sales',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final maps = await db.query('sales', where: 'id = ?', whereArgs: [id]);
     if (maps.isNotEmpty) {
       return Sale.fromMap(maps.first);
     }
@@ -683,18 +783,17 @@ class DatabaseHelper {
   // Get customer by ID
   Future<Customer?> getCustomerById(int id) async {
     final db = await database;
-    final maps = await db.query(
-      'customers',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    final maps = await db.query('customers', where: 'id = ?', whereArgs: [id]);
     if (maps.isNotEmpty) {
       return Customer.fromMap(maps.first);
     }
     return null;
   }
 
-  Future<List<SaleWithItems>> getSalesWithItemsInDateRange(DateTime start, DateTime end) async {
+  Future<List<SaleWithItems>> getSalesWithItemsInDateRange(
+    DateTime start,
+    DateTime end,
+  ) async {
     final db = await database;
     final salesMaps = await db.query(
       'sales',
@@ -729,12 +828,19 @@ class DatabaseHelper {
   Future<void> deleteSalesInDateRange(String startDate, String endDate) async {
     final db = await database;
     // First, delete sale_items associated with the sales to be deleted.
-    await db.rawDelete('''
+    await db.rawDelete(
+      '''
       DELETE FROM sale_items 
       WHERE sale_id IN (SELECT id FROM sales WHERE date BETWEEN ? AND ?)
-    ''', [startDate, endDate]);
+    ''',
+      [startDate, endDate],
+    );
     // Then, delete the sales themselves.
-    await db.delete('sales', where: 'date BETWEEN ? AND ?', whereArgs: [startDate, endDate]);
+    await db.delete(
+      'sales',
+      where: 'date BETWEEN ? AND ?',
+      whereArgs: [startDate, endDate],
+    );
   }
 
   /// Deletes all sales and sale items.
