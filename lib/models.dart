@@ -317,20 +317,22 @@ class CashSessionSummary {
 class SaleItem {
   final int? id;
   final int saleId;
-  final int productId;
+  final int? productId; // Made nullable for custom items
   final String productName;
   final int quantity;
   final double unitPrice;
   final double subtotal;
+  final bool isCustom; // New field to indicate if it's a custom item
 
   SaleItem({
     this.id,
     required this.saleId,
-    required this.productId,
+    this.productId, // Can be null for custom items
     required this.productName,
     required this.quantity,
     required this.unitPrice,
     required this.subtotal,
+    this.isCustom = false, // Default to false
   });
 
   Map<String, dynamic> toMap() {
@@ -342,6 +344,7 @@ class SaleItem {
       'quantity': quantity,
       'unit_price': unitPrice,
       'subtotal': subtotal,
+      'is_custom': isCustom ? 1 : 0, // Store boolean as integer
     };
   }
 
@@ -354,17 +357,69 @@ class SaleItem {
       quantity: map['quantity'],
       unitPrice: (map['unit_price'] as num).toDouble(),
       subtotal: (map['subtotal'] as num).toDouble(),
+      isCustom: map['is_custom'] == 1, // Convert integer back to boolean
     );
   }
 }
 
 class CartItem {
-  final Product product;
+  final Product? product; // Nullable for custom items
+  final String? customName; // For custom items
+  final double? customPrice; // For custom items
   int quantity;
+  final bool isCustom; // New field to indicate if it's a custom item
 
-  CartItem({required this.product, this.quantity = 1});
+  CartItem({
+    this.product,
+    this.customName,
+    this.customPrice,
+    this.quantity = 1,
+    this.isCustom = false,
+  }) : assert(
+          (isCustom && product == null && customName != null && customPrice != null) ||
+              (!isCustom && product != null && customName == null && customPrice == null),
+          'CartItem must either be a product or a custom item, not both or neither.',
+        );
 
-  double get subtotal => product.price * quantity;
+  double get subtotal {
+    if (isCustom) {
+      return (customPrice ?? 0.0) * quantity;
+    }
+    return (product?.price ?? 0.0) * quantity;
+  }
+
+  String get name {
+    if (isCustom) {
+      return customName!;
+    }
+    return product!.name;
+  }
+
+  double get unitPrice {
+    if (isCustom) {
+      return customPrice!;
+    }
+    return product!.price;
+  }
+
+  // Helper to create a CartItem from a Product
+  factory CartItem.fromProduct(Product product, {int quantity = 1}) {
+    return CartItem(product: product, quantity: quantity, isCustom: false);
+  }
+
+  // Helper to create a CartItem for a custom item
+  factory CartItem.fromCustom({
+    required String name,
+    required double price,
+    int quantity = 1,
+  }) {
+    return CartItem(
+      customName: name,
+      customPrice: price,
+      quantity: quantity,
+      isCustom: true,
+    );
+  }
 }
 
 // À AJOUTER dans models.dart
@@ -375,8 +430,9 @@ class Customer {
   final String? phone;
   final String? email;
   final String? address;
+  final bool isWalkin; // Added as a field
 
-  Customer({this.id, required this.name, this.phone, this.email, this.address});
+  Customer({this.id, required this.name, this.phone, this.email, this.address, this.isWalkin = false}); // isWalkin is now a field, initialized in constructor
 
   Map<String, dynamic> toMap() {
     return {
@@ -395,13 +451,12 @@ class Customer {
       phone: map['phone'],
       email: map['email'],
       address: map['address'],
+      isWalkin: map['id'] == 0, // Set based on id
     );
   }
 
   // Client spécial pour les ventes au comptoir
-  static Customer get walkin => Customer(id: 0, name: 'Client au comptoir');
-
-  bool get isWalkin => id == 0;
+  static Customer get walkin => Customer(id: 0, name: 'Client au comptoir', isWalkin: true);
 }
 
 class ShopInfo {

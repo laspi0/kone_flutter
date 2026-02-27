@@ -379,7 +379,7 @@ class _CartItem extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          item.product.name,
+                          item.name,
                           style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(fontWeight: FontWeight.bold),
                           maxLines: 1,
@@ -387,7 +387,7 @@ class _CartItem extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${item.product.price.toStringAsFixed(0)} F',
+                          '${item.unitPrice.toStringAsFixed(0)} F / unité',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: Theme.of(
@@ -399,7 +399,7 @@ class _CartItem extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    onPressed: () => auth.removeFromCart(item.product),
+                    onPressed: () => auth.removeFromCart(item),
                     icon: const Icon(Icons.close, size: 18),
                     color: Theme.of(context).colorScheme.error,
                     style: IconButton.styleFrom(
@@ -427,7 +427,7 @@ class _CartItem extends StatelessWidget {
                       children: [
                         IconButton(
                           onPressed: () => auth.updateCartQuantity(
-                            item.product,
+                            item,
                             item.quantity - 1,
                           ),
                           icon: const Icon(Icons.remove, size: 16),
@@ -445,7 +445,7 @@ class _CartItem extends StatelessWidget {
                         ),
                         IconButton(
                           onPressed: () => auth.updateCartQuantity(
-                            item.product,
+                            item,
                             item.quantity + 1,
                           ),
                           icon: const Icon(Icons.add, size: 16),

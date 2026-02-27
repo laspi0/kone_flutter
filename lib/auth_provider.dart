@@ -19,6 +19,7 @@ class AuthProvider extends ChangeNotifier {
   final DatabaseHelper _db = DatabaseHelper.instance;
 
   // Getters
+  DatabaseHelper get databaseHelper => _db; // Added getter
   User? get currentUser => _currentUser;
   ThemeMode get themeMode => _themeMode;
   bool get isLoading => _isLoading;
@@ -257,7 +258,7 @@ class AuthProvider extends ChangeNotifier {
   // Cart operations
   void addToCart(Product product) {
     final existingIndex = _cart.indexWhere(
-      (item) => item.product.id == product.id,
+      (item) => !item.isCustom && item.product?.id == product.id,
     );
 
     if (existingIndex >= 0) {
@@ -265,23 +266,57 @@ class AuthProvider extends ChangeNotifier {
         _cart[existingIndex].quantity++;
       }
     } else {
-      _cart.add(CartItem(product: product));
+      _cart.add(CartItem.fromProduct(product));
     }
     notifyListeners();
   }
 
-  void removeFromCart(Product product) {
-    _cart.removeWhere((item) => item.product.id == product.id);
+  void addCustomItemToCart({
+    required String name,
+    required double price,
+    int quantity = 1,
+  }) {
+    // For custom items, we don't check for existing items by ID,
+    // as two custom items with the same name might be distinct entries.
+    // We simply add it as a new entry.
+    _cart.add(CartItem.fromCustom(name: name, price: price, quantity: quantity));
     notifyListeners();
   }
 
-  void updateCartQuantity(Product product, int quantity) {
-    final index = _cart.indexWhere((item) => item.product.id == product.id);
+  void removeFromCart(CartItem itemToRemove) {
+    _cart.removeWhere((item) {
+      if (itemToRemove.isCustom) {
+        // For custom items, compare by name, price, and if possible, a unique identifier if added later
+        return item.isCustom &&
+            item.customName == itemToRemove.customName &&
+            item.customPrice == itemToRemove.customPrice;
+      } else {
+        // For product items, compare by product ID
+        return !item.isCustom && item.product?.id == itemToRemove.product?.id;
+      }
+    });
+    notifyListeners();
+  }
+
+  void updateCartQuantity(CartItem itemToUpdate, int quantity) {
+    final index = _cart.indexWhere((item) {
+      if (itemToUpdate.isCustom) {
+        return item.isCustom &&
+            item.customName == itemToUpdate.customName &&
+            item.customPrice == itemToUpdate.customPrice;
+      } else {
+        return !item.isCustom && item.product?.id == itemToUpdate.product?.id;
+      }
+    });
 
     if (index >= 0) {
       if (quantity <= 0) {
         _cart.removeAt(index);
-      } else if (quantity <= product.stock) {
+      } else if (!itemToUpdate.isCustom && quantity <= itemToUpdate.product!.stock) {
+        // Only check stock for non-custom items
+        _cart[index].quantity = quantity;
+      } else if (itemToUpdate.isCustom) {
+        // No stock limit for custom items
         _cart[index].quantity = quantity;
       }
       notifyListeners();
@@ -321,11 +356,12 @@ class AuthProvider extends ChangeNotifier {
           .map(
             (cartItem) => SaleItem(
               saleId: 0, // Will be updated by DB
-              productId: cartItem.product.id!,
-              productName: cartItem.product.name,
+              productId: cartItem.product?.id, // Nullable now
+              productName: cartItem.name,
               quantity: cartItem.quantity,
-              unitPrice: cartItem.product.price,
+              unitPrice: cartItem.unitPrice,
               subtotal: cartItem.subtotal,
+              isCustom: cartItem.isCustom, // New field
             ),
           )
           .toList();
@@ -333,6 +369,13 @@ class AuthProvider extends ChangeNotifier {
       final createdSaleId = await _db.createSale(sale, items);
       final fetchedSaleItems = await _db.getSaleItems(createdSaleId); // Fetch actual SaleItems with correct saleId
       final fullSale = await _db.getSaleById(createdSaleId); // Fetch the full Sale object
+
+      // Update stock for non-custom items
+      for (var cartItem in currentCart) {
+        if (!cartItem.isCustom && cartItem.product != null) {
+          await _db.updateProductStock(cartItem.product!.id!, cartItem.product!.stock - cartItem.quantity);
+        }
+      }
 
       _selectedCustomer = null; // Reset client
       clearCart();

@@ -373,58 +373,79 @@ class _SalesScreenState extends State<SalesScreen> {
                   ],
 
                   // Search bar
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withAlpha(20),
-                      ),
-                    ),
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: 'Rechercher un produit par nom...',
-                        hintStyle: TextStyle(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withAlpha(102),
-                        ),
-                        prefixIcon: Icon(
-                          Icons.search,
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withAlpha(128),
-                        ),
-                        suffixIcon: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (_searchQuery.isNotEmpty)
-                              IconButton(
-                                icon: const Icon(Icons.clear, size: 20),
-                                onPressed: () =>
-                                    setState(() => _searchQuery = ''),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withAlpha(20),
+                            ),
+                          ),
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: 'Rechercher un produit par nom...',
+                              hintStyle: TextStyle(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withAlpha(102),
                               ),
-                            if (isMobile)
-                              IconButton(
-                                icon: const Icon(Icons.qr_code_scanner_rounded),
-                                onPressed: _scanBarcodeMobile,
-                                color: Theme.of(context).colorScheme.primary,
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withAlpha(128),
                               ),
-                          ],
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (_searchQuery.isNotEmpty)
+                                    IconButton(
+                                      icon: const Icon(Icons.clear, size: 20),
+                                      onPressed: () =>
+                                          setState(() => _searchQuery = ''),
+                                    ),
+                                  if (isMobile)
+                                    IconButton(
+                                      icon: const Icon(Icons.qr_code_scanner_rounded),
+                                      onPressed: _scanBarcodeMobile,
+                                      color: Theme.of(context).colorScheme.primary,
+                                    ),
+                                ],
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 16,
+                              ),
+                            ),
+                            onChanged: (value) =>
+                                setState(() => _searchQuery = value),
+                          ),
                         ),
                       ),
-                      onChanged: (value) =>
-                          setState(() => _searchQuery = value),
-                    ),
+                      const SizedBox(width: 12),
+                      // Add Custom Item Button
+                      IconButton(
+                        onPressed: () => _showAddCustomItemDialog(context, auth),
+                        icon: const Icon(Icons.add_shopping_cart),
+                        tooltip: 'Ajouter un article personnalisé',
+                        style: IconButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.all(16),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   // Category filters
@@ -1245,6 +1266,13 @@ class _SalesScreenState extends State<SalesScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showAddCustomItemDialog(BuildContext context, AuthProvider auth) {
+    showDialog(
+      context: context,
+      builder: (context) => _AddCustomItemDialog(auth: auth),
     );
   }
 }

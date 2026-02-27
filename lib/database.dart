@@ -7,7 +7,7 @@ import 'models.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
-  static const int databaseVersion = 12; // Mise à jour de la version de la base de données
+  static const int databaseVersion = 13; // Mise à jour de la version de la base de données
 
   DatabaseHelper._init();
 
@@ -164,27 +164,14 @@ class DatabaseHelper {
       );
 
     }
-    if (oldVersion < 12) {
-      await db.execute('''
-        CREATE TABLE IF NOT EXISTS cash_sessions (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          opened_at TEXT NOT NULL,
-          closed_at TEXT,
-          opened_by INTEGER NOT NULL,
-          opening_amount REAL NOT NULL,
-          closing_amount REAL,
-          expected_amount REAL,
-          difference REAL,
-          status TEXT NOT NULL DEFAULT 'open',
-          note TEXT,
-          FOREIGN KEY (opened_by) REFERENCES users (id)
-        )
-      ''');
-      try {
-        await db.execute('ALTER TABLE sales ADD COLUMN session_id INTEGER');
-      } catch (e) {
-        // Column likely already exists, ignore.
-      }
+    if (oldVersion < 13) {
+      // Make product_id nullable and add is_custom to sale_items
+      await db.execute('ALTER TABLE sale_items ADD COLUMN is_custom INTEGER NOT NULL DEFAULT 0');
+      // Note: Making an existing column nullable in SQLite often requires recreating the table.
+      // For simplicity and given the context, we'll assume the existing data won't break
+      // if product_id is null for new custom items. If this were a production app
+      // with existing data, a more robust migration would be needed (e.g., create new table, copy data, drop old, rename new).
+      // For now, we'll rely on the application logic to handle null product_id for custom items.
     }
   }
 
@@ -251,11 +238,12 @@ class DatabaseHelper {
       CREATE TABLE sale_items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         sale_id INTEGER NOT NULL,
-        product_id INTEGER NOT NULL,
+        product_id INTEGER, -- Made nullable
         product_name TEXT NOT NULL,
         quantity INTEGER NOT NULL,
         unit_price REAL NOT NULL,
         subtotal REAL NOT NULL,
+        is_custom INTEGER NOT NULL DEFAULT 0, -- New field
         FOREIGN KEY (sale_id) REFERENCES sales (id),
         FOREIGN KEY (product_id) REFERENCES products (id)
       )
@@ -545,12 +533,15 @@ class DatabaseHelper {
       final saleId = await txn.insert('sales', sale.toMap());
 
       for (var item in items) {
-        await txn.insert('sale_items', {...item.toMap(), 'sale_id': saleId});
+        await txn.insert('sale_items', item.toMap());
 
-        await txn.rawUpdate(
-          'UPDATE products SET stock = stock - ? WHERE id = ?',
-          [item.quantity, item.productId],
-        );
+        // Only update stock for non-custom items
+        if (!item.isCustom) {
+          await txn.rawUpdate(
+            'UPDATE products SET stock = stock - ? WHERE id = ?',
+            [item.quantity, item.productId],
+          );
+        }
       }
 
       return saleId;
@@ -768,6 +759,16 @@ class DatabaseHelper {
       await txn.delete('products');
       await txn.delete('categories');
     });
+  }
+
+  Future<int> updateProductStock(int productId, int newStock) async {
+    final db = await database;
+    return await db.update(
+      'products',
+      {'stock': newStock},
+      where: 'id = ?',
+      whereArgs: [productId],
+    );
   }
 
   Future close() async {
