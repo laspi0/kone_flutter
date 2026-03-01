@@ -44,7 +44,7 @@ class PdfService {
         pageFormat: const PdfPageFormat(
           80 * PdfPageFormat.mm,
           3000 * PdfPageFormat.mm,
-          marginAll: 2 * PdfPageFormat.mm,
+          marginAll: 5 * PdfPageFormat.mm,
         ),
         build: (pw.Context context) {
           final amountPaid = sale.amountPaid;
