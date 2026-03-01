@@ -33,11 +33,8 @@ class PdfService {
           final logoImage = pw.MemoryImage(imageBytes);
           logoWidget = pw.Image(logoImage, height: 40); // Hauteur du logo
         }
-      } catch (e) {
-
-      }
+      } catch (e) {}
     }
-
 
     pdf.addPage(
       pw.MultiPage(
@@ -46,12 +43,12 @@ class PdfService {
           3000 * PdfPageFormat.mm,
           // Marge de 2mm de chaque côté sur un papier de 76mm
           // pour centrer le contenu (total de 4mm de marge)
-          marginAll: 2 * PdfPageFormat.mm,
+          marginAll: 4 * PdfPageFormat.mm,
         ),
         build: (pw.Context context) {
           final amountPaid = sale.amountPaid;
-          final change = sale.change ??
-              (amountPaid != null ? amountPaid - sale.total : 0);
+          final change =
+              sale.change ?? (amountPaid != null ? amountPaid - sale.total : 0);
 
           return [
             pw.Column(
@@ -277,10 +274,7 @@ class PdfService {
                   pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.end,
                     children: [
-                      pw.Text(
-                        'Reçu: ',
-                        style: const pw.TextStyle(fontSize: 9),
-                      ),
+                      pw.Text('Reçu: ', style: const pw.TextStyle(fontSize: 9)),
                       pw.Text(
                         '${formatCurrency.format(amountPaid)} FCFA',
                         style: const pw.TextStyle(fontSize: 9),
@@ -347,12 +341,7 @@ class PdfService {
       width: double.infinity,
       height: 1,
       decoration: const pw.BoxDecoration(
-        border: pw.Border(
-          top: pw.BorderSide(
-            color: PdfColors.black,
-            width: 1,
-          ),
-        ),
+        border: pw.Border(top: pw.BorderSide(color: PdfColors.black, width: 1)),
       ),
     );
   }
@@ -390,10 +379,7 @@ class PdfService {
       ],
     );
 
-    return pw.ThemeData.withFont(
-      base: baseFont,
-      bold: boldFont ?? baseFont,
-    );
+    return pw.ThemeData.withFont(base: baseFont, bold: boldFont ?? baseFont);
   }
 
   Future<pw.Font?> _loadFont({
