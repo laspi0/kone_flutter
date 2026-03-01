@@ -42,9 +42,11 @@ class PdfService {
     pdf.addPage(
       pw.MultiPage(
         pageFormat: const PdfPageFormat(
-          80 * PdfPageFormat.mm,
+          76 * PdfPageFormat.mm, // Largeur plus sûre pour l'impression
           3000 * PdfPageFormat.mm,
-          marginAll: 8 * PdfPageFormat.mm,
+          // Marge de 2mm de chaque côté sur un papier de 76mm
+          // pour centrer le contenu (total de 4mm de marge)
+          marginAll: 2 * PdfPageFormat.mm,
         ),
         build: (pw.Context context) {
           final amountPaid = sale.amountPaid;
